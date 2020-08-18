@@ -20,7 +20,6 @@ services:
       build: .docker/nginx
       container_name: micro-videos-nginx
       entrypoint: dockerize -template /var/www/.docker/nginx/template/nginx.conf:/var/www/.docker/nginx/nginx.conf -timeout 10s sh /var/www/.docker/nginx/entrypoint.sh
-      container_name: nginx
       restart: always
       tty: true
       environment:
