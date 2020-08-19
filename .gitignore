@@ -14,3 +14,5 @@ yarn-error.log
 /.metadata/
 /.buildpath
 /.project
+.idea/
+.vscode/
