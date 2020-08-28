@@ -14,7 +14,7 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 RUN usermod -u 1000 www-data
-    
+
 WORKDIR /var/www
 RUN rm -rf /var/www/html
 COPY . /var/www
