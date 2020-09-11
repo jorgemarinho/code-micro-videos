@@ -27,5 +27,6 @@ Route::group(['namespace' => 'Api'], function () {
 
     Route::resource('categories', 'CategoryController', $exceptionCreateEditAction);
     Route::resource('genres', 'GenreController', $exceptionCreateEditAction);
+    Route::resource('cast_members', 'CastMemberController', $exceptionCreateEditAction);
 
 });
