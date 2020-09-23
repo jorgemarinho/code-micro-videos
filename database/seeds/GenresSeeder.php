@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Category;
 use Illuminate\Database\Seeder;
 
 class GenresSeeder extends Seeder
@@ -11,6 +12,13 @@ class GenresSeeder extends Seeder
      */
     public function run()
     {
-        factory(\App\Models\Genre::class, 10)->create();
+
+        $categories = Category::all();
+        factory(\App\Models\Genre::class, 100)
+            ->create()
+            ->each(function (Genre $genre) use ($categories) {
+                $categoriesId = $categories->random(5)->pluck('id')->toArray();
+                $genre->categories()->attach($categoriesId);
+            });
     }
 }
