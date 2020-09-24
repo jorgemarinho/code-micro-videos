@@ -44,6 +44,10 @@ class GenresHasCategoriesRule implements Rule
      */
     public function passes($attribute, $value)
     {
+        if(!is_array($value)){
+            $value = [];
+        }
+
         $this->genresId = array_unique($value);
 
         if(!count($this->genresId) || !count($this->categoriesId)){
@@ -60,13 +64,14 @@ class GenresHasCategoriesRule implements Rule
             }
 
             array_push($categoriesFound, ...$row->pluck('category_id')->toArray());
-
-            if(count($categoriesFound) !== count($this->categoriesId)){
-                return false;
-            }
-
-            return true;
         }
+
+        $categoriesFound = array_unique($categoriesFound);
+        if(count($categoriesFound) !== count($this->categoriesId)){
+            return false;
+        }
+
+        return true;
 
     }
 
@@ -86,6 +91,6 @@ class GenresHasCategoriesRule implements Rule
      */
     public function message()
     {
-        return 'A genre ID must be related at least a category.';
+        return trans('validation.genres_has_categories');
     }
 }
