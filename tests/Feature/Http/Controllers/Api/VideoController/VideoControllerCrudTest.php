@@ -1,41 +1,13 @@
 <?php
 
-namespace Tests\Feature\Http\Controllers\Api;
+namespace Tests\Feature\Http\Controllers\Api\VideoController;
 
-use App\Http\Controllers\Api\VideoController;
-use App\Models\Category;
-use App\Models\Genre;
-use App\Models\Video;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Tests\Exceptions\TestException;
-use Illuminate\Http\Request;
-use Tests\TestCase;
 use Tests\Traits\TestSaves;
-use \Tests\Traits\TestValidations;
+use Tests\Traits\TestValidations;
 
-class VideoControllerTest extends TestCase
+class VideoControllerCrudTest extends BaseVideoControllerTestCase
 {
-    use DatabaseMigrations, TestValidations, TestSaves;
-
-    private $video;
-
-    private $sendData;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->video = factory(Video::class)->create([
-            'opened' => true
-        ]);
-
-        $this->sendData = [
-            'title' => 'title',
-            'description' => 'description',
-            'year_launched' => 2010,
-            'rating' => Video::RATING_LIST[0],
-            'duration' => 90
-        ];
-    }
+    use TestValidations, TestSaves;
 
     public function testIndex()
     {
@@ -55,7 +27,8 @@ class VideoControllerTest extends TestCase
             'rating' => '',
             'duration' => '',
             'categories_id' => '',
-            'genres_id' => ''
+            'genres_id' => '',
+
         ];
 
         $this->assertInvalidationInStoreAction($data, 'required');
@@ -166,7 +139,7 @@ class VideoControllerTest extends TestCase
         $this->assertInvalidationInUpdateAction($data, 'exists');
     }
 
-    public function testSave()
+    public function testSaveWithoutFiles()
     {
         $category = factory(Category::class)->create();
         $genre = factory(Genre::class)->create();
@@ -176,8 +149,7 @@ class VideoControllerTest extends TestCase
             [
                 'send_data' => $this->sendData + [
                     'categories_id' => [$category->id],
-                    'genres_id' => [$genre->id],
-                    'opened' => false
+                    'genres_id' => [$genre->id]
                 ],
                 'test_data' => $this->sendData + ['opened' => false]
             ],
@@ -243,6 +215,22 @@ class VideoControllerTest extends TestCase
         }
     }
 
+    protected function assertHasCategory($videoId, $categoryId)
+    {
+        $this->assertDatabaseHas('category_video', [
+            'video_id' => $videoId,
+            'category_id' => $categoryId
+        ]);
+    }
+
+    protected function assertHasGenre($videoId, $genreId)
+    {
+        $this->assertDatabaseHas('genre_video', [
+            'video_id' => $videoId,
+            'genre_id' => $genreId
+        ]);
+    }
+
     public function testShow()
     {
         $response = $this->get(route('videos.show', ['video' => $this->video->id]));
@@ -263,20 +251,9 @@ class VideoControllerTest extends TestCase
         $this->assertNull(Video::find($this->video->id));
     }
 
-    protected function assertHasCategory($videoId, $categoryId)
+    protected function model()
     {
-        $this->assertDatabaseHas('category_video', [
-            'video_id' => $videoId,
-            'category_id' => $categoryId
-        ]);
-    }
-
-    protected function assertHasGenre($videoId, $genreId)
-    {
-        $this->assertDatabaseHas('genre_video', [
-            'video_id' => $videoId,
-            'genre_id' => $genreId
-        ]);
+        return Video::class;
     }
 
     protected function routeStore()
@@ -287,10 +264,5 @@ class VideoControllerTest extends TestCase
     protected function routeUpdate()
     {
         return route('videos.update', ['video' => $this->video->id]);
-    }
-
-    protected function model()
-    {
-        return Video::class;
     }
 }
