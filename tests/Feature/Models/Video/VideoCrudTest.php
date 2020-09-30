@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Models\Video;
 
+use App\Models\Category;
+use App\Models\Genre;
 use App\Models\Video;
 use Illuminate\Database\QueryException;
 
@@ -22,7 +24,9 @@ class VideoCrudTest extends BaseVideoTestCase
         factory(Video::class)->create();
         $videos = Video::all();
         $this->assertCount(1,$videos);
+
         $videoKeys = array_keys($videos->first()->getAttributes());
+
         $this->assertEqualsCanonicalizing(
             [
                 'id',
@@ -33,6 +37,7 @@ class VideoCrudTest extends BaseVideoTestCase
                 'rating',
                 'duration',
                 'video_file',
+                'thumb_file',
                 'created_at',
                 'updated_at',
                 'deleted_at'

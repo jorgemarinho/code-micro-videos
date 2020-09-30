@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\GenreController;
 use App\Http\Resources\GenreResource;
 use App\Models\Category;
 use App\Models\Genre;
@@ -72,7 +73,7 @@ class GenreControllerTest extends TestCase
 
         $response
             ->assertStatus(200)
-            ->assertJson([$this->genre->toArray()]);
+            ->assertJson($this->genre->toArray());
 
         /*
         $response
@@ -352,7 +353,7 @@ class GenreControllerTest extends TestCase
 
         $hasError = false;
         try {
-            $controller->update($request);
+            $controller->update($request, $this->genre->id);
         } catch (TestException $exception) {
             $this->assertCount(1, Genre::all());
             $hasError = true;

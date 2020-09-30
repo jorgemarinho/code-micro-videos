@@ -45,7 +45,7 @@ class VideoUploadTest extends BaseVideoTestCase
         $this->assertTrue($hasError);
     }
 
-    protected function testUpdateWithFiles()
+    public function testUpdateWithFiles()
     {
         \Storage::fake();
         $video = factory(Video::class)->create();

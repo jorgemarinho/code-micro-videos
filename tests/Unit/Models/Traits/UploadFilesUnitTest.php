@@ -45,7 +45,7 @@ class UploadFilesUnitTest extends TestCase
         $file1 = UploadedFile::fake()->create('video1.mp4')->size(1);
         $file2 = UploadedFile::fake()->create('video2.mp4')->size(1);
         $this->obj->uploadFiles([$file1,$file2]);
-        $this->obj->deleteOldFile();
+        $this->obj->deleteOldFiles();
         $this->assertCount(2, \Storage::allFiles());
 
         $this->obj->oldFiles = [$file1->hashName()];
