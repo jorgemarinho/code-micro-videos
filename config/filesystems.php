@@ -51,6 +51,7 @@ return [
         'video_local' => [
             'driver' => 'local',
             'root' => storage_path('app/public/videos'),
+            'url' => env('APP_URL') . '/storage/videos',
         ],
 
         'public' => [
@@ -90,7 +91,6 @@ return [
     | the locations of the links and the values should be their targets.
     |
     */
-
     'links' => [
         public_path('storage') => storage_path('app/public'),
     ],
