@@ -1,4 +1,4 @@
-FROM php:7.3.6-fpm-alpine3.9
+FROM php:7.3.6-fpm-alpine3.10
 
 RUN apk add openssl bash mysql-client nodejs npm git freetype-dev libjpeg-turbo-dev libpng-dev
 RUN apk add --no-cache shadow
