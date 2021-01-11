@@ -23,7 +23,7 @@ const validationSchema = yup.object().shape({
         .label('Nome')
         .required()
         .max(255),
-    type: yup
+    categories_id: yup
         .array()
         .label('Categorias')
         .required()
@@ -49,7 +49,7 @@ export const Form = () => {
     const buttonProps: ButtonProps = {
         className: classes.submit,
         color: 'secondary',
-        variant: "outlined",
+        variant: "contained",
         disabled: loading
     }
 
@@ -61,7 +61,7 @@ export const Form = () => {
             const promises = [categoryHttp.list()];
 
             if (id) {
-              //  promises.push(genreHttp.get(id));
+                promises.push(genreHttp.get(id));
             }
 
             try {
@@ -91,7 +91,8 @@ export const Form = () => {
         }
 
         loadData();
-    });
+    }, [id, reset, snackbar]);
+
 
     React.useEffect(() => {
         register({ name: "categories_id" })
@@ -180,7 +181,9 @@ export const Form = () => {
                 }
             </TextField>
             <Box dir={"rtl"}>
-                <Button {...buttonProps} onClick={() => onSubmit(getValues(), null)} >Salvar</Button>
+                <Button
+                    color={"primary"}
+                    {...buttonProps} onClick={() => onSubmit(getValues(), null)} >Salvar</Button>
                 <Button {...buttonProps} type="submit" >Salvar e continuar editando</Button>
             </Box>
         </form>

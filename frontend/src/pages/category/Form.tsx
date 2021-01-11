@@ -101,7 +101,7 @@ export const Form = () => {
             .finally(() => setLoading(false))
             */
 
-    });
+    }, [id, reset, snackbar]);
 
     React.useEffect(() => {
         register({ name: "is_active" })

@@ -63,9 +63,9 @@ export const Form = () => {
 
             setLoading(true);
             try {
-                //const { data } = await castMemberHttp.get(id);
-               // setCastMember(data.data)
-              //  reset(data.data);
+                const { data } = await castMemberHttp.get(id);
+                setCastMember(data.data)
+                reset(data.data);
             }
             catch (error) {
                 console.log(error);
@@ -79,7 +79,7 @@ export const Form = () => {
             }
         }
         getCastMember();
-    });
+    }, [id, reset, snackbar]);
 
     React.useEffect(() => {
         register({ name: "type" })
