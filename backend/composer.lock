@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7cfdc1bf1c7646fbedf52c926c517418",
+    "content-hash": "9b49ddd5d4fe023378abc5671a1b794d",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1235,6 +1235,62 @@
                 "source": "https://github.com/laravel/framework"
             },
             "time": "2020-12-01T15:01:25+00:00"
+        },
+        {
+            "name": "laravel/helpers",
+            "version": "v1.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/helpers.git",
+                "reference": "cde8ea2427db4f37d67729846b70452499210a21"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/helpers/zipball/cde8ea2427db4f37d67729846b70452499210a21",
+                "reference": "cde8ea2427db4f37d67729846b70452499210a21",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "~5.8.0|^6.0|^7.0|^8.0",
+                "php": "^7.1.3|^8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7.0|^8.0|^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/helpers.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
+                },
+                {
+                    "name": "Dries Vints",
+                    "email": "dries.vints@gmail.com"
+                }
+            ],
+            "description": "Provides backwards compatibility for helpers in the latest Laravel release.",
+            "keywords": [
+                "helpers",
+                "laravel"
+            ],
+            "support": {
+                "source": "https://github.com/laravel/helpers/tree/v1.4.0"
+            },
+            "time": "2020-11-03T16:38:41+00:00"
         },
         {
             "name": "laravel/tinker",
@@ -5018,6 +5074,71 @@
                 "source": "https://github.com/tijsverkoyen/CssToInlineStyles/tree/2.2.3"
             },
             "time": "2020-07-13T06:12:54+00:00"
+        },
+        {
+            "name": "tucker-eric/eloquentfilter",
+            "version": "2.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Tucker-Eric/EloquentFilter.git",
+                "reference": "fe52f968d2ceb9dcdc655cb54f4aee76939de489"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Tucker-Eric/EloquentFilter/zipball/fe52f968d2ceb9dcdc655cb54f4aee76939de489",
+                "reference": "fe52f968d2ceb9dcdc655cb54f4aee76939de489",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/config": "~5.0|~6.0|~7.0|~8.0",
+                "illuminate/console": "~5.0|~6.0|~7.0|~8.0",
+                "illuminate/database": "~5.0|~6.0|~7.0|~8.0",
+                "illuminate/filesystem": "~5.0|~6.0|~7.0|~8.0",
+                "illuminate/pagination": "~5.0|~6.0|~7.0|~8.0",
+                "illuminate/support": "~5.0|~6.0|~7.0|~8.0",
+                "php": ">=5.5.9"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.3.1",
+                "phpunit/phpunit": "~5.4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "EloquentFilter\\ServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "EloquentFilter\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eric Tucker",
+                    "email": "tucker.ericm@gmail.com"
+                }
+            ],
+            "description": "An Eloquent way to filter Eloquent Models",
+            "keywords": [
+                "eloquent",
+                "filter",
+                "laravel",
+                "model",
+                "query",
+                "search"
+            ],
+            "support": {
+                "issues": "https://github.com/Tucker-Eric/EloquentFilter/issues",
+                "source": "https://github.com/Tucker-Eric/EloquentFilter/tree/2.4.0"
+            },
+            "time": "2020-09-07T23:24:50+00:00"
         },
         {
             "name": "vlucas/phpdotenv",

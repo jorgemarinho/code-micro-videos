@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Filters\CategoryFilter;
+use EloquentFilter\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
-    use SoftDeletes, \App\Models\Traits\Uuid;
+    use SoftDeletes, \App\Models\Traits\Uuid, Filterable;
 
     protected $fillable = [
         'name',
@@ -25,4 +27,9 @@ class Category extends Model
     public $incrementing = false;
 
     protected $keyType = 'string';
+
+    public function modelFilter()
+    {
+        return $this->provideFilter(CategoryFilter::class);
+    }
 }

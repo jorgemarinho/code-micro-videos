@@ -1,22 +1,37 @@
 // @flow 
 import { Chip } from '@material-ui/core';
-import MUIDataTable, { MUIDataTableColumn } from 'mui-datatables';
 import * as React from 'react';
-import { httpVideo } from '../../util/http';
 import format from 'date-fns/format';
 import parseISO from 'date-fns/parseISO';
+import genreHttp from '../../util/http/genre-http';
+import { Genre, ListResponse } from '../../util/models';
+import DefaultTable, { TableColumn, makeActionStyles } from '../../components/Table';
+import { IconButton, MuiThemeProvider } from '@material-ui/core';
+import { Link } from "react-router-dom";
+import EditIcon from '@material-ui/icons/Edit';
+import { useSnackbar } from 'notistack';
 
-const columnsDefinition: MUIDataTableColumn[] = [
+const columnsDefinition: TableColumn[] = [
+
+    {
+        name: 'id',
+        label: 'ID',
+        width: '27%',
+        options: {
+            sort: false
+        }
+    },
     {
         name: 'name',
-        label: 'Nome'
+        label: 'Nome',
+        width: '46%'
     },
     {
         name: 'categories',
         label: 'Categorias',
         options: {
             customBodyRender(value, tableMeta, updateValue) {
-                return value.map( (value:any) => value.name).join(', ');
+                return value.map((value: any) => value.name).join(', ');
             }
         }
     },
@@ -37,30 +52,73 @@ const columnsDefinition: MUIDataTableColumn[] = [
                 return <span>{format(parseISO(value), 'dd/MM/yyyy')}</span>;
             }
         }
+    },
+    {
+        name: 'actions',
+        label: 'Ações',
+        width: '13%',
+        options: {
+            sort: false,
+            customBodyRender: (value, tableMeta) => {
+                return (
+                    <IconButton
+                        color={'secondary'}
+                        component={Link}
+                        to={'/genres/' + tableMeta.rowData[0] + '/edit'}
+                    >
+                        <EditIcon fontSize={'inherit'} />
+                    </IconButton>
+                )
+            }
+        }
     }
 ];
 
+const Table = () => {
 
-type Props = {
-
-};
-
-const Table = (props: Props) => {
-
-    const [data, setData] = React.useState([]);
+    const snackbar = useSnackbar();
+    const [data, setData] = React.useState<Genre[]>([]);
+    const [loading, setLoading] = React.useState<boolean>(false);
 
     React.useEffect(() => {
-        httpVideo.get('genres').then(
-            response => setData(response.data.data)
-        )
-    }, []);
+
+        let isSubscribed = true;
+        (async () => {
+
+            setLoading(true);
+            try {
+                const { data } = await genreHttp.list<ListResponse<Genre>>();
+                if (isSubscribed) {
+                    setData(data.data);
+                }
+            } catch (error) {
+                snackbar.enqueueSnackbar(
+                    'Não foi possível carregar as informações',
+                    { variant: 'error' }
+                )
+            } finally {
+                setLoading(false);
+            }
+
+        })();
+
+        return () => {
+            isSubscribed = false;
+        }
+
+    }, [snackbar]);
 
     return (
-        <MUIDataTable
-            title="Listagem de gêneros"
-            columns={columnsDefinition}
-            data={data}
-        />
+
+        <MuiThemeProvider theme={makeActionStyles(columnsDefinition.length - 1)} >
+            <DefaultTable
+                title="Listagem de gêneros"
+                columns={columnsDefinition}
+                data={data}
+                loading={loading}
+                options={{ responsive: "standard" }}
+            />
+        </MuiThemeProvider>
     );
 };
 

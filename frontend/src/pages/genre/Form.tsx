@@ -1,4 +1,4 @@
-import { Box, Button, ButtonProps, makeStyles, TextField, Theme,MenuItem } from '@material-ui/core';
+import { TextField, MenuItem } from '@material-ui/core';
 import *  as React from 'react';
 import { useForm } from 'react-hook-form';
 import genreHttp from '../../util/http/genre-http';
@@ -7,15 +7,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import categoryHttp from '../../util/http/category-http';
 import { useSnackbar } from 'notistack';
 import { useHistory, useParams } from 'react-router-dom';
-
-
-const useStyles = makeStyles((theme: Theme) => {
-    return {
-        submit: {
-            margin: theme.spacing(1)
-        }
-    }
-});
+import { Category, Genre } from '../../util/models';
+import SubmitActions from '../../components/SubmitActions';
 
 const validationSchema = yup.object().shape({
     name: yup
@@ -31,34 +24,27 @@ const validationSchema = yup.object().shape({
 
 export const Form = () => {
 
-    const { register, handleSubmit, getValues, setValue, watch, errors, reset } = useForm<{name : any, categories_id: any }>({
+    const { register, handleSubmit, getValues, setValue, watch, errors, reset, trigger } = useForm<{ name: any, categories_id: any }>({
         resolver: yupResolver(validationSchema),
         defaultValues: {
             categories_id: []
         }
     });
 
-    const classes = useStyles();
     const snackbar = useSnackbar();
     const history = useHistory();
     const { id } = useParams<{ id: string }>();
-    const [genre, setGenre] = React.useState<{ id: string } | null>(null);
-    const [categories, setCategories] = React.useState<any[]>([]);
+    const [genre, setGenre] = React.useState<Genre | null>(null);
+    const [categories, setCategories] = React.useState<Category[]>([]);
     const [loading, setLoading] = React.useState<boolean>(false);
-    
-    const buttonProps: ButtonProps = {
-        className: classes.submit,
-        color: 'secondary',
-        variant: "contained",
-        disabled: loading
-    }
 
     React.useEffect(() => {
 
-        async function loadData() {
+        let isSubscribed = true;
+        (async () => {
 
             setLoading(true);
-            const promises = [categoryHttp.list()];
+            const promises = [categoryHttp.list({ queryParams: { 'all': '' } })];
 
             if (id) {
                 promises.push(genreHttp.get(id));
@@ -67,19 +53,22 @@ export const Form = () => {
             try {
 
                 const [categoriesResponse, genreResponse] = await Promise.all(promises);
-                setCategories(categoriesResponse.data.data);
 
-                if (id) {
-                    setGenre(genreResponse.data.data);
-                    reset({
-                        ...genreResponse.data.data,
-                        categories_id: genreResponse.data.data.categories.map(category => category.id)
-                    });
+                if (isSubscribed) {
+                    setCategories(categoriesResponse.data.data);
+
+                    if (id) {
+                        setGenre(genreResponse.data.data);
+                        reset({
+                            ...genreResponse.data.data,
+                            categories_id: genreResponse.data.data.categories.map(category => category.id)
+                        });
+                    }
                 }
 
             } catch (error) {
 
-                console.log(error);
+                console.error(error);
                 snackbar.enqueueSnackbar(
                     'Não foi possível carregar as informações',
                     { variant: 'error' }
@@ -88,9 +77,12 @@ export const Form = () => {
             } finally {
                 setLoading(false);
             }
+        })();
+
+        return () => {
+            isSubscribed = false;
         }
 
-        loadData();
     }, [id, reset, snackbar]);
 
 
@@ -180,12 +172,14 @@ export const Form = () => {
                     )
                 }
             </TextField>
-            <Box dir={"rtl"}>
-                <Button
-                    color={"primary"}
-                    {...buttonProps} onClick={() => onSubmit(getValues(), null)} >Salvar</Button>
-                <Button {...buttonProps} type="submit" >Salvar e continuar editando</Button>
-            </Box>
+            <SubmitActions
+                disabledButtons={loading}
+                handleSave={() =>
+                    trigger().then(isValid => {
+                        isValid && onSubmit(getValues(), null)
+                    })
+                }
+            />
         </form>
     );
 }

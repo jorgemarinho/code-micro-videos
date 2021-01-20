@@ -1,4 +1,4 @@
-import { Box, Button, ButtonProps, makeStyles, TextField, Checkbox, Theme, FormControlLabel } from '@material-ui/core';
+import { TextField, Checkbox, FormControlLabel } from '@material-ui/core';
 import *  as React from 'react';
 import { useForm } from 'react-hook-form';
 import categoryHttp from '../../util/http/category-http';
@@ -6,14 +6,9 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from '../../util/vendor/yup';
 import { useHistory, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-
-const useStyles = makeStyles((theme: Theme) => {
-    return {
-        submit: {
-            margin: theme.spacing(1)
-        }
-    }
-});
+import { Category } from '../../util/models';
+import SubmitActions from '../../components/SubmitActions';
+import { DefaultForm } from '../../components/DefaultForm';
 
 const validationSchema = yup.object().shape({
     name: yup
@@ -23,11 +18,6 @@ const validationSchema = yup.object().shape({
 });
 
 export const Form = () => {
-    interface IFormInputs {
-        name: string
-        description: string
-        is_active: boolean
-    }
 
     const {
         register,
@@ -36,8 +26,9 @@ export const Form = () => {
         setValue,
         errors,
         reset,
-        watch
-    } = useForm<IFormInputs>({
+        watch,
+        trigger
+    } = useForm<Category>({
         resolver: yupResolver(validationSchema),
         defaultValues: {
             is_active: true
@@ -48,19 +39,11 @@ export const Form = () => {
         id: string
     }
 
-    const classes = useStyles();
     const snackbar = useSnackbar();
     const history = useHistory();
     const { id } = useParams<ParamTypes>();
-    const [category, setCategory] = React.useState<{ id: string } | null>(null);
+    const [category, setCategory] = React.useState<Category | null>(null);
     const [loading, setLoading] = React.useState<boolean>(false);
-
-    const buttonProps: ButtonProps = {
-        className: classes.submit,
-        color: 'secondary',
-        variant: "contained",
-        disabled: loading
-    }
 
     React.useEffect(() => {
 
@@ -68,13 +51,13 @@ export const Form = () => {
             return;
         }
 
-        (async function getCategory() {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+        (async function getCategory() {
 
             setLoading(true);
             try {
 
-                const {data} = await categoryHttp.get(id);
-                
+                const { data } = await categoryHttp.get(id);
+
                 setCategory(data.data);
                 reset(data.data);
             }
@@ -89,17 +72,6 @@ export const Form = () => {
                 setLoading(false);
             }
         })();
-
-        /*
-        setLoading(true);
-        categoryHttp
-            .get(id)
-            .then(({data}) => {
-                setCategory(data.data)
-                reset(data.data);
-            })
-            .finally(() => setLoading(false))
-            */
 
     }, [id, reset, snackbar]);
 
@@ -147,7 +119,11 @@ export const Form = () => {
     }
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
+
+        <DefaultForm 
+            GrindItemProps={{xs: 6, md: 12}}
+            onSubmit={handleSubmit(onSubmit)}>
+
             <TextField
                 name="name"
                 label="Nome"
@@ -159,7 +135,6 @@ export const Form = () => {
                 helperText={errors.name && errors.name.message}
                 InputLabelProps={{ shrink: true }}
             />
-
             <TextField
                 name="description"
                 label="Descrição"
@@ -187,12 +162,14 @@ export const Form = () => {
                 label={'Ativo?'}
                 labelPlacement={'end'}
             />
-            <Box dir={"rtl"}>
-                <Button
-                    color={"primary"}
-                    {...buttonProps} onClick={() => onSubmit(getValues(), null)} >Salvar</Button>
-                <Button {...buttonProps} type="submit" >Salvar e continuar editando</Button>
-            </Box>
-        </form>
+            <SubmitActions
+                disabledButtons={loading}
+                handleSave={() =>
+                    trigger().then(isValid => {
+                        isValid && onSubmit(getValues(), null)
+                    })
+                }
+            />
+        </DefaultForm>
     );
 }
