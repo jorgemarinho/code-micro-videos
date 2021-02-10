@@ -182,7 +182,7 @@ const Table = () => {
     }, []);
 
     React.useEffect(() => {
-        console.log('eita');
+     
         subscribed.current = true;
         filterManager.pushHistory();
         getData();
@@ -195,6 +195,8 @@ const Table = () => {
         debounceFilterState.pagination.page,
         debounceFilterState.pagination.per_page,
         debounceFilterState.order,
+        JSON.stringify(debounceFilterState.extraFilter)
+
     ]);
 
 

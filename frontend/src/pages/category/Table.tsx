@@ -11,8 +11,11 @@ import { IconButton, MuiThemeProvider } from '@material-ui/core';
 import { Link } from "react-router-dom";
 import EditIcon from '@material-ui/icons/Edit';
 import { FilterResetButton } from '../../components/Table/FilterResetButton';
-import {Creators} from '../../store/filter';
 import useFilter from '../../hooks/useFilter';
+import * as yup from '../../util/vendor/yup';
+
+const categoryActive = Object.values( { 1:'Sim', 0: 'Não' });
+
 
 const columnsDefinition: TableColumn[] = [
     {
@@ -39,7 +42,7 @@ const columnsDefinition: TableColumn[] = [
         options: {
             filterList: [],
             filterOptions: {
-                names: ['Sim', 'Não']
+                names: categoryActive
             },
             customBodyRender(value, tableMeta, updateValue) {
                 return value ? <BadgeYes /> : <BadgeNo />;
@@ -63,6 +66,7 @@ const columnsDefinition: TableColumn[] = [
         width: '13%',
         options: {
             sort: false,
+            filter: false,
             customBodyRender: (value, tableMeta) => {
                 return (
                     <IconButton
@@ -103,8 +107,49 @@ const Table = () => {
         debounceTime: debounceTime,
         rowsPerPage,
         rowsPerPageOptions,
-        tableRef
+        tableRef,
+        extraFilter: {
+            createValidationSchema: () => {
+                return yup.object().shape({
+                    is_active: yup.mixed()
+                        .nullable()
+                        .transform(value => {
+                           
+                           //return !value || value === 'Sim' ? 1 : 0;
+                           return !value || !categoryActive.includes(value) ? undefined : value;
+
+                        })
+                        .default(null)
+                })
+            },
+            formatSearchParams: (debouncedState) => {
+                return debouncedState.extraFilter
+                    ? {
+                        ...(
+                            debouncedState.extraFilter.is_active &&
+                            { is_active: debouncedState.extraFilter.is_active }
+                        )
+                    }
+                    : undefined
+            },
+            getStateFromURL: (queryParams) => {
+                return {
+                    is_active: queryParams.get('is_active')
+                }
+            }
+        }
     });
+
+    const indexColumnType = columns.findIndex(c => c.name === 'is_active');
+    const columnType = columns[indexColumnType];
+    const typeFilterValue = filterState.extraFilter && filterState.extraFilter.type as never;
+    (columnType.options as any).filterList = typeFilterValue ? [typeFilterValue] : [];
+
+    const serverSideFilterList = columns.map(column => []);
+
+    if (typeFilterValue) {
+        serverSideFilterList[indexColumnType] = [typeFilterValue];
+    }
 
     React.useEffect(() => {
         subscribed.current = true;
@@ -119,6 +164,7 @@ const Table = () => {
         debounceFilterState.pagination.page,
         debounceFilterState.pagination.per_page,
         debounceFilterState.order,
+        JSON.stringify(debounceFilterState.extraFilter)
     ]);
 
 
@@ -133,6 +179,11 @@ const Table = () => {
                     per_page: filterState.pagination.per_page,
                     sort: filterState.order.sort,
                     dir: filterState.order.dir,
+                    ...(
+                        debounceFilterState.extraFilter &&
+                        debounceFilterState.extraFilter.is_active &&
+                        { is_active: debounceFilterState.extraFilter.is_active === 'Sim' ? 1 : 0}
+                    )
                 }
             });
             if (subscribed.current) {
@@ -173,6 +224,13 @@ const Table = () => {
                     rowsPerPage: filterState.pagination.per_page,
                     rowsPerPageOptions,
                     count: totalRecords,
+                    onFilterChange: (column, filterList) => {
+                        const columnIndex = columns.findIndex( c => c.name === column)
+
+                        filterManager.changeExtraFilter({
+                            [column as any]: filterList[columnIndex].length ? filterList[columnIndex][0] : null
+                        })
+                    },
                     customToolbar: () => (
                         <FilterResetButton 
                             handleClick={ () => filterManager.resetFilter()} 
