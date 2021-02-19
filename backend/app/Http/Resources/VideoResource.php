@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\CastMember;
 use App\Models\Category;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,6 +13,7 @@ class VideoResource extends JsonResource
         return parent::toArray($request) + [
             'categories' => CategoryResource::collection($this->categories),
             'genres' => GenreResource::collection($this->genres),
+            'cast_members' => CastMemberResource::collection($this->castMembers),
             'thumb_file_url' => $this->thumb_file_url,
             'banner_file_url' => $this->banner_file_url,
             'trailer_file_url' => $this->trailer_file_url,
