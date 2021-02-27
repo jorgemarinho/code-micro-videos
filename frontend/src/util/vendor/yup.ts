@@ -3,7 +3,8 @@ import { setLocale } from 'yup';
 const ptBR = {
 
     mixed: {
-        required: '${path} é obrigatorio'
+        required: '${path} é obrigatorio',
+        notType: '${path} é inválido'
     },
     string: {
         max: '${path} precisa ter máximo ${max} caracteres'

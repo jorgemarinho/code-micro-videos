@@ -1,4 +1,4 @@
-import { TextField, Grid, FormControlLabel, Typography, Checkbox, useMediaQuery, useTheme, Button } from '@material-ui/core';
+import { TextField, Grid, FormControlLabel, Typography, Checkbox, useMediaQuery, useTheme, Card, CardContent, makeStyles, Theme, FormHelperText } from '@material-ui/core';
 import *  as React from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from '../../../util/vendor/yup';
@@ -8,11 +8,19 @@ import { useHistory, useParams } from 'react-router-dom';
 import SubmitActions from '../../../components/SubmitActions';
 import videoHttp from '../../../util/http/video-http';
 import { DefaultForm } from '../../../components/DefaultForm';
-import { Video } from '../../../util/models';
-import Rating from '../../../components/Rating';
+import { Video, VideoFileFieldsMap } from '../../../util/models';
 import { RatingField } from './RatingField';
-import InputFile from '../../../components/InputFile';
-import CloudUploadIcon from '@material-ui/icons/CloudUpload';
+import UploadField from './UploadField';
+import GenreField from './GenreField';
+import CategoryField from './CategoryField';
+
+const useStyles = makeStyles((theme: Theme) => ({
+    cardUpload: {
+        borderRadius: "4px",
+        backgroundColor: "#f5f5f5",
+        margin: theme.spacing(2, 0)
+    }
+}));
 
 const validationSchema = yup.object().shape({
     title: yup
@@ -34,11 +42,21 @@ const validationSchema = yup.object().shape({
         .label('Duração')
         .required()
         .min(1),
+    genres: yup
+        .array()
+        .label('Gêneros')
+        .required(),
+    categories: yup
+        .array()
+        .label('Categorias')
+        .required(),          
     rating: yup
         .string()
         .label('Classificação')
         .required()
 });
+
+const fileFields = Object.keys(VideoFileFieldsMap);
 
 export const Form = () => {
 
@@ -52,19 +70,23 @@ export const Form = () => {
         reset,
         trigger
     } = useForm<{
-            rating: any, 
-            opened: any, 
-            title: string,
-            description: string,
-            year_launched: number,
-            duration: number
-        }>({
+        rating: any,
+        opened: any,
+        title: string,
+        description: string,
+        year_launched: number,
+        duration: number,
+        genres: Array<any>,
+        categories: Array<any>
+    }>({
         resolver: yupResolver(validationSchema),
         defaultValues: {
-
+            genres: [],
+            categories: []
         }
     });
 
+    const classes = useStyles();
     const snackbar = useSnackbar();
     const history = useHistory();
     const { id } = useParams<{ id: string }>();
@@ -74,8 +96,14 @@ export const Form = () => {
     const isGreaterMd = useMediaQuery(theme.breakpoints.up('md'));
 
     React.useEffect(() => {
-        ['rating', 'opened'].forEach(name => register({name}));
-    },[register]);
+        [
+            'rating', 
+            'opened', 
+            'genres', 
+            'categories',
+            ...fileFields
+        ].forEach(name => register({ name }));
+    }, [register]);
 
     React.useEffect(() => {
 
@@ -150,6 +178,7 @@ export const Form = () => {
         }
     }
 
+
     return (
 
         <DefaultForm
@@ -217,30 +246,82 @@ export const Form = () => {
                     </Grid>
                     Elenco
                     <br />
-                    Gêneros e categorias
+
+                    <Grid container spacing={1}>
+                        <Grid item xs={12} md={6}>
+                            <GenreField  
+                                genres={watch('genres')}
+                                setGenres={(value) => setValue('genres', value, { shouldValidate: true })}
+                                categories={watch('categories')}
+                                 setCategories={(value) => setValue('categories', value, { shouldValidate: true })}
+                                error={errors.genres}
+                                disabled={loading}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <CategoryField 
+                                 categories={watch('categories')}
+                                 setCategories={(value) => setValue('categories', value, { shouldValidate: true })}
+                                 genres={watch('genres')}
+                                 error={errors.categories}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <FormHelperText>
+                                Escolha os gêneros do vídeos
+                            </FormHelperText>
+                            <FormHelperText>
+                                Escolha pelo menos uma categoria de cada gênero
+                            </FormHelperText>     
+                        </Grid>
+                    </Grid>
                 </Grid>
                 <Grid item xs={6}>
-                    <RatingField 
+                    <RatingField
                         value={watch('rating')}
                         setValue={(value) => setValue('rating' as never, value, { shouldValidate: true })}
-                        error={errors.rating} 
+                        error={errors.rating}
                         disabled={loading}
                         FormControlProps={{
                             margin: isGreaterMd ? 'none' : 'normal'
                         }}
                     />
                     <br />
-                    Uploads
-                    <InputFile ButtonFile={
-                        <Button
-                            endIcon={<CloudUploadIcon />}
-                            variant={"contained"}
-                            color={"primary"}
-                            onClick={() => {}}
-                        >
-                            Adicionar
-                        </Button>
-                    }/>
+                    <Card className={classes.cardUpload}>
+                        <CardContent>
+                            <Typography color="primary" variant="h6">
+                                Imagens
+                            </Typography>
+                            <UploadField
+                                accept={'images/*'}
+                                label={'Thumb'}
+                                setValue={(value) => setValue('thumb_file', value)}
+                            />
+                            <UploadField
+                                accept={'images/*'}
+                                label={'Banner'}
+                                setValue={(value) => setValue('banner_file', value)}
+                            />
+                        </CardContent>
+                    </Card>
+
+                    <Card className={classes.cardUpload}>
+                        <CardContent>
+                            <Typography color="primary" variant="h6">
+                                Videos
+                            </Typography>
+                            <UploadField
+                                accept={'video/mp4'}
+                                label={'Trailer'}
+                                setValue={(value) => setValue('trailer_file', value)}
+                            />
+                            <UploadField
+                                accept={'video/mp4'}
+                                label={'Principal'}
+                                setValue={(value) => setValue('video_file', value)}
+                            />
+                        </CardContent>
+                    </Card>
                     <br />
                     <FormControlLabel
                         control={
