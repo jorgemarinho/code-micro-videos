@@ -1,6 +1,6 @@
 // @flow 
 import * as React from 'react';
-import AsyncAutocomplete from '../../../components/AsyncAutocomplete';
+import AsyncAutocomplete, {AsyncAutocompleteComponent} from '../../../components/AsyncAutocomplete';
 import GridSelected from '../../../components/GridSelected';
 import genreHttp from '../../../util/http/genre-http';
 import useHttpHandled from '../../../hooks/useHttpHandled';
@@ -8,8 +8,12 @@ import GridSelectedItem from '../../../components/GridSelectedItem';
 import { FormControl, FormControlProps, FormHelperText, Typography } from '@material-ui/core';
 import useCollectionManager from '../../../hooks/useCollectionManager';
 import { getGenresFromCategory } from '../../../util/model-filters';
+import {useImperativeHandle, RefAttributes, useRef, MutableRefObject} from "react";
 
-interface GenreFieldProps {
+export interface GenreFieldComponent {
+    clear: () => void
+}
+interface GenreFieldProps extends RefAttributes<GenreFieldComponent>{
     genres: any[];
     setGenres: (genres) => void,
     categories: any[],
@@ -19,7 +23,7 @@ interface GenreFieldProps {
     FormControlProps?: FormControlProps;
 }
 
-const GenreField: React.FC<GenreFieldProps> = (props) => {
+const GenreField = React.forwardRef<GenreFieldComponent, GenreFieldProps>((props, ref) => {
 
     const { 
         genres, 
@@ -33,6 +37,7 @@ const GenreField: React.FC<GenreFieldProps> = (props) => {
     const { addItem, removeItem } = useCollectionManager(genres, setGenres);
     const { removeItem: removeCategory } = useCollectionManager(categories, setCategories);
 
+    const autocompleteRef = useRef() as MutableRefObject<AsyncAutocompleteComponent>;
 
     function fetchOptions(searchText) {
 
@@ -45,6 +50,10 @@ const GenreField: React.FC<GenreFieldProps> = (props) => {
                 })
         ).then(data => data.data);
     }
+
+    useImperativeHandle(ref, () => ({
+        clear: () => autocompleteRef.current.clear()
+    }));
 
     return (
         <>
@@ -102,6 +111,6 @@ const GenreField: React.FC<GenreFieldProps> = (props) => {
                 </FormControl>    
         </>
     );
-};
+});
 
 export default GenreField;

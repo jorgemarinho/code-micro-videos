@@ -3,8 +3,10 @@ import { Button, FormControl, FormControlProps} from '@material-ui/core';
 import * as React from 'react';
 import InputFile, { InputFileComponent } from '../../../components/InputFile';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
-
-interface UploadFieldProps {
+export interface UploadFielComponent {
+    clear: () => void;
+}
+interface UploadFieldProps extends React.RefAttributes<UploadFielComponent>{
     accept: string;
     label: string;
     setValue: (value) => void;
@@ -13,7 +15,7 @@ interface UploadFieldProps {
     FormControlProps?: FormControlProps;
 }
 
-export const UploadField: React.FC<UploadFieldProps> = (props) => {
+export const UploadField = React.forwardRef<UploadFielComponent,UploadFieldProps> ( (props, ref) => {
     const fileRef = React.useRef() as React.MutableRefObject<InputFileComponent>;
     const {
         accept, 
@@ -22,6 +24,11 @@ export const UploadField: React.FC<UploadFieldProps> = (props) => {
         error, 
         disabled 
     } = props;
+
+    React.useImperativeHandle(ref, () => ({
+        clear: () => fileRef.current.clear()
+    }));
+
     return (
         <FormControl
             error={error !== undefined}
@@ -57,6 +64,6 @@ export const UploadField: React.FC<UploadFieldProps> = (props) => {
             />
         </FormControl>
     );
-};
+});
 
 export default UploadField;

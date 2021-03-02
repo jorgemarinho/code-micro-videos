@@ -8,14 +8,14 @@ import Table from './Table';
 
 const PageList = () => {
     return (
-        <Page title={'Listagem de gêneros'}>
+        <Page title={'Listagem de videos'}>
             <Box dir={'rtl'} paddingBottom={2}>
                 <Fab
-                    title="Adicionar gênero"
+                    title="Adicionar video"
                     color={'secondary'}
                     size="small"
                     component={Link}
-                    to="/genres/create"
+                    to="/video/create"
                 >
                     <AddIcon/>
                 </Fab>

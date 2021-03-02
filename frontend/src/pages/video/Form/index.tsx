@@ -10,15 +10,25 @@ import videoHttp from '../../../util/http/video-http';
 import { DefaultForm } from '../../../components/DefaultForm';
 import { Video, VideoFileFieldsMap } from '../../../util/models';
 import { RatingField } from './RatingField';
-import UploadField from './UploadField';
-import GenreField from './GenreField';
-import CategoryField from './CategoryField';
+import UploadField, { UploadFielComponent } from './UploadField';
+import GenreField, { GenreFieldComponent } from './GenreField';
+import CategoryField, { CategoryFieldComponent } from './CategoryField';
+import CastMemberField, { CastMemberFieldComponent } from './CastMemberField';
+import { useRef, MutableRefObject, createRef } from "react";
+import { omit, zipObject } from 'lodash';
 
 const useStyles = makeStyles((theme: Theme) => ({
     cardUpload: {
         borderRadius: "4px",
         backgroundColor: "#f5f5f5",
         margin: theme.spacing(2, 0)
+    },
+    cardOpened: {
+        borderRadius: "4px",
+        backgroundColor: "#f5f5f5"
+    },
+    cardContentOpened: {
+        paddingBottom: theme.spacing(2) + 'px !important'
     }
 }));
 
@@ -42,14 +52,28 @@ const validationSchema = yup.object().shape({
         .label('Duração')
         .required()
         .min(1),
+    cast_members: yup
+        .array()
+        .label('Elenco')
+        .required(),
     genres: yup
         .array()
         .label('Gêneros')
-        .required(),
+        .required()
+        .test({
+            message: 'Cada gênero escolhido precisa ter pelo menos uma categoria selecionada',
+            test(value){
+                return (value as any).every(
+                    v => v.categories.filter(
+                        cat => this.parent.categories.map(c => c.id).includes(cat.id)
+                    ).length !== 0
+                );
+            }
+        }),
     categories: yup
         .array()
         .label('Categorias')
-        .required(),          
+        .required(),
     rating: yup
         .string()
         .label('Classificação')
@@ -77,12 +101,16 @@ export const Form = () => {
         year_launched: number,
         duration: number,
         genres: Array<any>,
-        categories: Array<any>
+        categories: Array<any>,
+        cast_members: Array<any>
     }>({
         resolver: yupResolver(validationSchema),
         defaultValues: {
+            rating: null,
+            opened: false,
             genres: [],
-            categories: []
+            categories: [],
+            cast_members: []
         }
     });
 
@@ -94,12 +122,18 @@ export const Form = () => {
     const [loading, setLoading] = React.useState<boolean>(false);
     const theme = useTheme();
     const isGreaterMd = useMediaQuery(theme.breakpoints.up('md'));
+    const castMemberRef = useRef() as MutableRefObject<CastMemberFieldComponent>;
+    const genreRef = useRef() as MutableRefObject<GenreFieldComponent>;
+    const categoryRef = useRef() as MutableRefObject<CategoryFieldComponent>;
+    const uploadsRef = useRef(
+        zipObject(fileFields, fileFields.map(() => createRef()))
+    ) as MutableRefObject<{ [key: string]: MutableRefObject<UploadFielComponent> }>;
 
     React.useEffect(() => {
         [
-            'rating', 
-            'opened', 
-            'genres', 
+            'rating',
+            'opened',
+            'genres',
             'categories',
             ...fileFields
         ].forEach(name => register({ name }));
@@ -141,13 +175,18 @@ export const Form = () => {
     }, []);
 
     async function onSubmit(formData, event) {
+        
+        const sendData = omit(formData, ['cast_members', 'genres', 'categories']);
+        sendData['cast_members_id'] = formData['cast_members'].map(cast_member => cast_member.id);
+        sendData['categories_id'] = formData['categories'].map(category => category.id);
+        sendData['genres_id'] = formData['genres'].map(genre => genre.id);
 
         setLoading(true);
         try {
 
             const http = !video
-                ? videoHttp.create(formData)
-                : videoHttp.update(video.id, formData)
+                ? videoHttp.create(sendData)
+                : videoHttp.update(video.id, { ...sendData, _method :'PUT'}, { http: { usePost: true } });
 
             const { data } = await http;
 
@@ -155,7 +194,7 @@ export const Form = () => {
                 'Cadastrado com sucesso! ', {
                 variant: 'success'
             });
-
+            id && resetForm(video);
             setTimeout(() => {
                 event
                     ? (
@@ -178,6 +217,15 @@ export const Form = () => {
         }
     }
 
+    function resetForm(data) {
+        Object.keys(uploadsRef.current).forEach(
+            field => uploadsRef.current[field].current.clear()
+        );
+        castMemberRef.current.clear();
+        genreRef.current.clear();
+        categoryRef.current.clear();
+        reset(data);
+    }
 
     return (
 
@@ -244,26 +292,33 @@ export const Form = () => {
                             />
                         </Grid>
                     </Grid>
-                    Elenco
-                    <br />
+                    <CastMemberField
+                        ref={castMemberRef}
+                        castMembers={watch('cast_members')}
+                        setCastMembers={(value) => setValue('cast_members', value, { shouldValidate: true })}
+                        error={errors.cast_members}
+                        disabled={loading}
+                    />
 
                     <Grid container spacing={1}>
                         <Grid item xs={12} md={6}>
-                            <GenreField  
+                            <GenreField
+                                ref={genreRef}
                                 genres={watch('genres')}
                                 setGenres={(value) => setValue('genres', value, { shouldValidate: true })}
                                 categories={watch('categories')}
-                                 setCategories={(value) => setValue('categories', value, { shouldValidate: true })}
+                                setCategories={(value) => setValue('categories', value, { shouldValidate: true })}
                                 error={errors.genres}
                                 disabled={loading}
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
-                            <CategoryField 
-                                 categories={watch('categories')}
-                                 setCategories={(value) => setValue('categories', value, { shouldValidate: true })}
-                                 genres={watch('genres')}
-                                 error={errors.categories}
+                            <CategoryField
+                                ref={categoryRef}
+                                categories={watch('categories')}
+                                setCategories={(value) => setValue('categories', value, { shouldValidate: true })}
+                                genres={watch('genres')}
+                                error={errors.categories}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -272,7 +327,7 @@ export const Form = () => {
                             </FormHelperText>
                             <FormHelperText>
                                 Escolha pelo menos uma categoria de cada gênero
-                            </FormHelperText>     
+                            </FormHelperText>
                         </Grid>
                     </Grid>
                 </Grid>
@@ -293,11 +348,13 @@ export const Form = () => {
                                 Imagens
                             </Typography>
                             <UploadField
+                                ref={uploadsRef.current['thumb_file']}
                                 accept={'images/*'}
                                 label={'Thumb'}
                                 setValue={(value) => setValue('thumb_file', value)}
                             />
                             <UploadField
+                                ref={uploadsRef.current['banner_file']}
                                 accept={'images/*'}
                                 label={'Banner'}
                                 setValue={(value) => setValue('banner_file', value)}
@@ -311,11 +368,13 @@ export const Form = () => {
                                 Videos
                             </Typography>
                             <UploadField
+                                ref={uploadsRef.current['trailer_file']}
                                 accept={'video/mp4'}
                                 label={'Trailer'}
                                 setValue={(value) => setValue('trailer_file', value)}
                             />
                             <UploadField
+                                ref={uploadsRef.current['video_file']}
                                 accept={'video/mp4'}
                                 label={'Principal'}
                                 setValue={(value) => setValue('video_file', value)}
@@ -323,25 +382,29 @@ export const Form = () => {
                         </CardContent>
                     </Card>
                     <br />
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                name="opened"
-                                color={'primary'}
-                                onChange={
-                                    () => setValue('opened' as never, !getValues()['opened'])
+                    <Card className={classes.cardOpened}>
+                        <CardContent className={classes.cardContentOpened}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        name="opened"
+                                        color={'primary'}
+                                        onChange={
+                                            () => setValue('opened' as never, !getValues()['opened'])
+                                        }
+                                        checked={watch('opened')}
+                                        disabled={loading}
+                                    />
                                 }
-                                checked={watch('opened')}
-                                disabled={loading}
+                                label={
+                                    <Typography color="primary" variant={"subtitle2"}>
+                                        Quero que este conteúdo apareça na seção lançamento
+                                    </Typography>
+                                }
+                                labelPlacement="end"
                             />
-                        }
-                        label={
-                            <Typography color="primary" variant={"subtitle2"}>
-                                Quero que este conteúdo apareça na seção lançamento
-                            </Typography>
-                        }
-                        labelPlacement="end"
-                    />
+                        </CardContent>
+                    </Card>
                 </Grid>
             </Grid>
             <SubmitActions
