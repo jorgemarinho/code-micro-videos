@@ -1,4 +1,5 @@
 // @flow 
+import * as React from 'react';
 import { CircularProgress, TextField, TextFieldProps } from '@material-ui/core';
 import { Autocomplete, AutocompleteProps } from '@material-ui/lab';
 import { useState, useEffect, useImperativeHandle } from 'react';
@@ -18,7 +19,8 @@ export interface AsyncAutocompleteProps extends React.RefAttributes<AsyncAutocom
     AutocompleteProps?: Omit<AutocompletePropsOmit, 'options'>;
 }   
 
-const AsyncAutocomplete: React.FC<AsyncAutocompleteProps> = (props, ref) => {
+const AsyncAutocomplete = React.forwardRef<AsyncAutocompleteComponent, AsyncAutocompleteProps>((props, ref) => {
+
 
     const { AutocompleteProps, debounceTime = 300 } = props;
     const { freeSolo = false, onOpen, onClose, onInputChange } = AutocompleteProps as any;
@@ -117,6 +119,6 @@ const AsyncAutocomplete: React.FC<AsyncAutocompleteProps> = (props, ref) => {
     return (
         <Autocomplete {...autocompleteProps} />
     );
-};
+});
 
 export default AsyncAutocomplete;
