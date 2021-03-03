@@ -55,11 +55,11 @@ const validationSchema = yup.object().shape({
     cast_members: yup
         .array()
         .label('Elenco')
-        .required(),
+        .min(1),
     genres: yup
         .array()
         .label('Gêneros')
-        .required()
+        .min(1)
         .test({
             message: 'Cada gênero escolhido precisa ter pelo menos uma categoria selecionada',
             test(value){
@@ -73,7 +73,7 @@ const validationSchema = yup.object().shape({
     categories: yup
         .array()
         .label('Categorias')
-        .required(),
+        .min(1),
     rating: yup
         .string()
         .label('Classificação')
