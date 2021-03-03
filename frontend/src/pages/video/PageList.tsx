@@ -15,7 +15,7 @@ const PageList = () => {
                     color={'secondary'}
                     size="small"
                     component={Link}
-                    to="/video/create"
+                    to="/videos/create"
                 >
                     <AddIcon/>
                 </Fab>
