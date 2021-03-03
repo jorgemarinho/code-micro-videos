@@ -18,7 +18,7 @@ export interface AsyncAutocompleteProps extends React.RefAttributes<AsyncAutocom
     AutocompleteProps?: Omit<AutocompletePropsOmit, 'options'>;
 }   
 
-export const AsyncAutocomplete: React.FC<AsyncAutocompleteProps> = (props, ref) => {
+const AsyncAutocomplete: React.FC<AsyncAutocompleteProps> = (props, ref) => {
 
     const { AutocompleteProps, debounceTime = 300 } = props;
     const { freeSolo = false, onOpen, onClose, onInputChange } = AutocompleteProps as any;
