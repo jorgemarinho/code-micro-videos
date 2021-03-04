@@ -33,7 +33,7 @@ class VideoController extends BasicCrudController
             'cast_members_id' => [
                 'required',
                 'array',
-                'exists:cast_member,id,deleted_at,NULL'
+                'exists:cast_members,id,deleted_at,NULL'
             ],
             'thumb_file' => 'image|max:' . Video::THUMB_FILE_MAX_SIZE, //5mb
             'banner_file' => 'image|max:' . Video::BANNER_FILE_MAX_SIZE, //10MB

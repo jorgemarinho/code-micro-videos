@@ -55,11 +55,11 @@ const validationSchema = yup.object().shape({
     cast_members: yup
         .array()
         .label('Elenco')
-        .min(1),
+        .min(1, 'Elenco e obrigatório'),
     genres: yup
         .array()
         .label('Gêneros')
-        .min(1)
+        .min(1, 'Gêneros e obrigatório')
         .test({
             message: 'Cada gênero escolhido precisa ter pelo menos uma categoria selecionada',
             test(value){
@@ -73,7 +73,7 @@ const validationSchema = yup.object().shape({
     categories: yup
         .array()
         .label('Categorias')
-        .min(1),
+        .min(1, 'Categorias e obrigatório'),
     rating: yup
         .string()
         .label('Classificação')
@@ -133,6 +133,7 @@ export const Form = () => {
         [
             'rating',
             'opened',
+            'cast_members',
             'genres',
             'categories',
             ...fileFields
@@ -175,7 +176,7 @@ export const Form = () => {
     }, []);
 
     async function onSubmit(formData, event) {
-        
+        console.log( formData );
         const sendData = omit(formData, ['cast_members', 'genres', 'categories']);
         sendData['cast_members_id'] = formData['cast_members'].map(cast_member => cast_member.id);
         sendData['categories_id'] = formData['categories'].map(category => category.id);
