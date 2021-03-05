@@ -27,12 +27,12 @@ abstract class BasicCrudController extends Controller
     public function index(Request $request)
     {
 
-        $perPage = (int) $request->get('per_page', $this->defaultPerPage );
+        $perPage = (int) $request->get('per_page', $this->defaultPerPage);
         $hasFilter = in_array(\EloquentFilter\Filterable::class, class_uses($this->model()));
 
         $query = $this->queryBuilder();
 
-        if($hasFilter){
+        if ($hasFilter) {
             $query = $query->filter($request->all());
         }
 
@@ -87,6 +87,28 @@ abstract class BasicCrudController extends Controller
         $obj = $this->findOrFail($id);
         $obj->delete();
         return response()->noContent(); //204 - No Content
+    }
+
+    public function destroyCollection(Request $request)
+    {
+        $data = $this->validateIds($request);
+        $this->model()::whereIn('id', $data['ids'])->delete();
+        return response()->noContent();
+    }
+
+    protected function validateIds(Request $request)
+    {
+        $model = $this->model();
+        $ids = explode(',', $request->get('ids'));
+        $validator = \Validator::make(
+            [
+                'ids' => $ids
+            ],
+            [
+                'ids' => 'required|exists:' . (new $model)->getTable() . ',id'
+            ]
+        );
+        return $validator->validate();
     }
 
     protected function queryBuilder(): Builder

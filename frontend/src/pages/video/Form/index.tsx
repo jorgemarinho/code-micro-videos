@@ -16,6 +16,7 @@ import CategoryField, { CategoryFieldComponent } from './CategoryField';
 import CastMemberField, { CastMemberFieldComponent } from './CastMemberField';
 import { useRef, MutableRefObject, createRef } from "react";
 import { omit, zipObject } from 'lodash';
+import useSnackbarFormError from '../../../hooks/useSnackbarFormError';
 
 const useStyles = makeStyles((theme: Theme) => ({
     cardUpload: {
@@ -92,7 +93,8 @@ export const Form = () => {
         watch,
         errors,
         reset,
-        trigger
+        trigger,
+        formState
     } = useForm<{
         rating: any,
         opened: any,
@@ -113,6 +115,8 @@ export const Form = () => {
             cast_members: []
         }
     });
+
+    useSnackbarFormError(formState.submitCount, errors);
 
     const classes = useStyles();
     const snackbar = useSnackbar();
