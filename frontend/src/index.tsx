@@ -13,4 +13,4 @@ ReactDOM.render(
     document.getElementById('root')
 );
 
-service.unregister();
+serviceWorker.unregister();
