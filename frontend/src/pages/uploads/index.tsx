@@ -39,7 +39,7 @@ const Uploads = () => {
     );
 
     return (
-        <Page >
+        <Page title={'Uploads'}>
            { 
                 uploads.map( (upload, key) => (
                     <Card elevation={5} key={key}>

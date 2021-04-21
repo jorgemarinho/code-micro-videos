@@ -4,7 +4,7 @@ import AsyncAutocomplete, {AsyncAutocompleteComponent} from '../../../components
 import GridSelected from '../../../components/GridSelected';
 import useHttpHandled from '../../../hooks/useHttpHandled';
 import GridSelectedItem from '../../../components/GridSelectedItem';
-import {  FormControl, FormControlProps, FormHelperText, makeStyles, Theme, Typography } from '@material-ui/core';
+import {  FormControl, FormControlProps, FormHelperText, makeStyles, Theme, Typography, useTheme } from '@material-ui/core';
 import categoryHttp from '../../../util/http/category-http';
 import useCollectionManager from '../../../hooks/useCollectionManager';
 import { Genre } from '../../../util/models';
