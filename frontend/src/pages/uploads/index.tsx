@@ -14,7 +14,7 @@ import {
 } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import UploadItem from './UploadItem';
-import {Page} from "../../components/Page";
+import { Page } from '../../components/Navbar/Page';
 import { useSelector } from 'react-redux';
 import { Upload, UploadModule } from '../../store/upload/types';
 import {VideoFileFieldsMap} from "../../util/models";
