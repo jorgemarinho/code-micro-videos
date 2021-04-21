@@ -13,6 +13,7 @@ import EditIcon from '@material-ui/icons/Edit';
 import { FilterResetButton } from '../../components/Table/FilterResetButton';
 import useFilter from '../../hooks/useFilter';
 import * as yup from '../../util/vendor/yup';
+import LoadingContext from '../../components/loading/LoadingContext';
 
 const categoryActive = Object.values( { 1:'Sim', 0: 'Não' });
 
@@ -91,7 +92,7 @@ const Table = () => {
     const snackbar = useSnackbar();
     const subscribed = React.useRef(true);
     const [data, setData] = React.useState<Category[]>([]);
-    const [loading, setLoading] = React.useState<boolean>(false);
+    const loading = React.useContext(LoadingContext);
     const tableRef = React.useRef() as React.MutableRefObject<MuiDataTableRefComponent>;
 
     const {       
@@ -170,7 +171,6 @@ const Table = () => {
 
     async function getData() {
 
-        setLoading(true);
         try {
             const { data } = await categoryHttp.list<ListResponse<Category>>({
                 queryParams: {
@@ -203,8 +203,6 @@ const Table = () => {
                 { variant: 'error' }
             )
 
-        } finally {
-            setLoading(false);
         }
     }
 

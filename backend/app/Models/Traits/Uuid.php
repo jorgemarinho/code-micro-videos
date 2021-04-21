@@ -4,7 +4,7 @@ namespace App\Models\Traits;
 
 use Ramsey\Uuid\Uuid as RamseyUuid;
 
-trait Uuid{
+trait Uuid {
 
     public static function boot() {
 

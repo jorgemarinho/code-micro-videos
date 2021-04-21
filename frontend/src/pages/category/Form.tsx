@@ -9,6 +9,7 @@ import { useSnackbar } from 'notistack';
 import { Category } from '../../util/models';
 import SubmitActions from '../../components/SubmitActions';
 import { DefaultForm } from '../../components/DefaultForm';
+import LoadingContext from '../../components/loading/LoadingContext';
 
 const validationSchema = yup.object().shape({
     name: yup
@@ -43,7 +44,7 @@ export const Form = () => {
     const history = useHistory();
     const { id } = useParams<ParamTypes>();
     const [category, setCategory] = React.useState<Category | null>(null);
-    const [loading, setLoading] = React.useState<boolean>(false);
+    const loading = React.useContext(LoadingContext);
 
     React.useEffect(() => {
 
@@ -53,7 +54,6 @@ export const Form = () => {
 
         (async function getCategory() {
 
-            setLoading(true);
             try {
 
                 const { data } = await categoryHttp.get(id);
@@ -68,9 +68,6 @@ export const Form = () => {
                     { variant: 'error' }
                 )
             }
-            finally {
-                setLoading(false);
-            }
         })();
 
     }, [id, reset, snackbar]);
@@ -81,7 +78,6 @@ export const Form = () => {
 
     async function onSubmit(formData, event) {
 
-        setLoading(true);
         try {
 
             const http = !category
@@ -107,14 +103,10 @@ export const Form = () => {
 
         } catch (error) {
 
-            console.log(error);
             snackbar.enqueueSnackbar(
                 'Não foi possível salvar a categoria :( ', {
                 variant: 'error'
             })
-
-        } finally {
-            setLoading(false);
         }
     }
 

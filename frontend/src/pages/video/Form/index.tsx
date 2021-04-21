@@ -1,4 +1,4 @@
-import { TextField, Grid, FormControlLabel, Typography, Checkbox, useMediaQuery, useTheme, Card, CardContent, makeStyles, Theme, FormHelperText } from '@material-ui/core';
+import { TextField, Grid, FormControlLabel, Typography, Checkbox, useMediaQuery, useTheme, Card, CardContent, makeStyles, Theme, FormHelperText, Snackbar } from '@material-ui/core';
 import *  as React from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from '../../../util/vendor/yup';
@@ -17,6 +17,11 @@ import CastMemberField, { CastMemberFieldComponent } from './CastMemberField';
 import { useRef, MutableRefObject, createRef } from "react";
 import { omit, zipObject } from 'lodash';
 import useSnackbarFormError from '../../../hooks/useSnackbarFormError';
+import SnackbarUpload from '../../../components/SnackbarUpload';
+import {useSelector, useDispatch} from 'react-redux';
+import {FileInfo, Upload, UploadModule} from '../../../store/upload/types';
+import {Creators} from '../../../store/upload';
+import LoadingContext from '../../../components/loading/LoadingContext';
 
 const useStyles = makeStyles((theme: Theme) => ({
     cardUpload: {
@@ -123,7 +128,7 @@ export const Form = () => {
     const history = useHistory();
     const { id } = useParams<{ id: string }>();
     const [video, setVideo] = React.useState<Video | null>(null);
-    const [loading, setLoading] = React.useState<boolean>(false);
+    const loading  = React.useContext(LoadingContext);
     const theme = useTheme();
     const isGreaterMd = useMediaQuery(theme.breakpoints.up('md'));
     const castMemberRef = useRef() as MutableRefObject<CastMemberFieldComponent>;
@@ -132,6 +137,13 @@ export const Form = () => {
     const uploadsRef = useRef(
         zipObject(fileFields, fileFields.map(() => createRef()))
     ) as MutableRefObject<{ [key: string]: MutableRefObject<UploadFielComponent> }>;
+
+    /*
+    const uploads = useSelector<UploadModule, Upload[]>(
+        (state) => state.upload.uploads
+    );*/
+
+    const dispatch = useDispatch();
 
     React.useEffect(() => {
         [
@@ -152,8 +164,7 @@ export const Form = () => {
 
         let isSubscribed = true;
         (async () => {
-
-            setLoading(true);
+           
             try {
 
                 const { data } = await videoHttp.get(id);
@@ -167,9 +178,6 @@ export const Form = () => {
                     'Não foi possível carregar as informações',
                     { variant: 'error' }
                 )
-
-            } finally {
-                setLoading(false);
             }
         })();
 
@@ -180,18 +188,20 @@ export const Form = () => {
     }, []);
 
     async function onSubmit(formData, event) {
-        console.log( formData );
-        const sendData = omit(formData, ['cast_members', 'genres', 'categories']);
+        
+        const sendData = omit(
+            formData, 
+            [...fileFields,'cast_members', 'genres', 'categories']
+        );
         sendData['cast_members_id'] = formData['cast_members'].map(cast_member => cast_member.id);
         sendData['categories_id'] = formData['categories'].map(category => category.id);
         sendData['genres_id'] = formData['genres'].map(genre => genre.id);
 
-        setLoading(true);
         try {
 
             const http = !video
                 ? videoHttp.create(sendData)
-                : videoHttp.update(video.id, { ...sendData, _method :'PUT'}, { http: { usePost: true } });
+                : videoHttp.update(video.id,sendData);
 
             const { data } = await http;
 
@@ -199,7 +209,11 @@ export const Form = () => {
                 'Cadastrado com sucesso! ', {
                 variant: 'success'
             });
+
+            uploadFiles(data.data);
+
             id && resetForm(video);
+
             setTimeout(() => {
                 event
                     ? (
@@ -217,8 +231,6 @@ export const Form = () => {
                 variant: 'error'
             })
 
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -232,8 +244,33 @@ export const Form = () => {
         reset(data);
     }
 
-    return (
+    function uploadFiles(video) {
+        const files : FileInfo[] = fileFields
+            .filter(file => getValues()[file])
+            .map(file => ({fileField: file, file: getValues()[file]}));
 
+        if(!files.length){
+            return;
+        }
+
+        dispatch(Creators.addUpload({video, files}));
+        
+        snackbar.enqueueSnackbar('', {
+            key: 'snackbar-upload',
+            persist: true,
+            anchorOrigin:{
+                vertical: 'bottom',
+                horizontal: 'right'
+            },
+            content: (key) => {
+                const id = key as any;
+                return <SnackbarUpload id={id} />
+            }
+        });
+    }
+
+    return (
+        
         <DefaultForm
             GrindItemProps={{ xs: 12 }}
             onSubmit={handleSubmit(onSubmit)}
@@ -304,7 +341,6 @@ export const Form = () => {
                         error={errors.cast_members}
                         disabled={loading}
                     />
-
                     <Grid container spacing={1}>
                         <Grid item xs={12} md={6}>
                             <GenreField
@@ -325,14 +361,6 @@ export const Form = () => {
                                 genres={watch('genres')}
                                 error={errors.categories}
                             />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <FormHelperText>
-                                Escolha os gêneros do vídeos
-                            </FormHelperText>
-                            <FormHelperText>
-                                Escolha pelo menos uma categoria de cada gênero
-                            </FormHelperText>
                         </Grid>
                     </Grid>
                 </Grid>

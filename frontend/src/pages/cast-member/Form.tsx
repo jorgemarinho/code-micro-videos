@@ -27,7 +27,16 @@ export const Form = () => {
         id: string
     }
 
-    const { register, handleSubmit, getValues, setValue, errors, reset, watch, trigger } = useForm({
+    const { 
+        register, 
+        handleSubmit, 
+        getValues, 
+        setValue, 
+        errors, 
+        reset, 
+        watch, 
+        trigger 
+    } = useForm<{name: any, type: number}>({
         resolver: yupResolver(validationSchema),
     });
 

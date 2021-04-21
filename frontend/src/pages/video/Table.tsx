@@ -17,6 +17,7 @@ import { FilterResetButton } from '../../components/Table/FilterResetButton';
 import categoryHttp from '../../util/http/category-http';
 import videoHttp from '../../util/http/video-http';
 import useDeleteCollection from '../../hooks/useDeleteCollection';
+import LoadingContext from '../../components/loading/LoadingContext';
 
 const columnsDefinition: TableColumn[] = [
 
@@ -104,7 +105,7 @@ const Table = () => {
     const snackbar = useSnackbar();
     const subscribed = React.useRef(true);
     const [data, setData] = React.useState<Video[]>([]);
-    const [loading, setLoading] = React.useState<boolean>(false);
+    const loading = React.useContext(LoadingContext);
     const {openDeleteDialog, setOpenDeleteDialog, rowsToDelete, setRowsToDelete} = useDeleteCollection();
     const tableRef = React.useRef() as React.MutableRefObject<MuiDataTableRefComponent>;
 
@@ -143,7 +144,6 @@ const Table = () => {
 
     async function getData() {
 
-        setLoading(true);
         try {
             
             const { data } = await videoHttp.list<ListResponse<Video>>({
@@ -175,8 +175,6 @@ const Table = () => {
                 { variant: 'error' }
             )
 
-        } finally {
-            setLoading(false);
         }
     }
 

@@ -35,8 +35,8 @@ const CategoryField = React.forwardRef<CategoryFieldComponent, CategoryFieldProp
     const classes = useStyle();
     const autocompleteHttp = useHttpHandled();
     const { addItem, removeItem } = useCollectionManager(categories, setCategories);
-
     const autocompleteRef = useRef() as MutableRefObject<AsyncAutocompleteComponent>;
+    const theme = useTheme();
 
     function fetchOptions(searchText) {
 
@@ -73,6 +73,9 @@ const CategoryField = React.forwardRef<CategoryFieldComponent, CategoryFieldProp
                     error: error !== undefined
                 }}
             />
+            <FormHelperText style={{height: theme.spacing(3)}}>
+                Escolha pelo menos uma categoria de cada gênero
+            </FormHelperText>
             <FormControl
                 margin={"none"}
                 fullWidth

@@ -39,6 +39,7 @@ class Video extends Model
     ];
 
     public $incrementing = false;
+    protected $keyType = 'string';
     protected $hidden = ['banner_file', 'thumb_file', 'trailer_file', 'video_file'];
     public static $fileFields = ['banner_file', 'thumb_file', 'trailer_file', 'video_file'];
 

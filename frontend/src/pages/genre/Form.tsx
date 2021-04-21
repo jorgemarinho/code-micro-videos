@@ -24,7 +24,16 @@ const validationSchema = yup.object().shape({
 
 export const Form = () => {
 
-    const { register, handleSubmit, getValues, setValue, watch, errors, reset, trigger } = useForm<{ name: any, categories_id: any }>({
+    const { 
+        register, 
+        handleSubmit, 
+        getValues, 
+        setValue, 
+        watch, 
+        errors, 
+        reset, 
+        trigger 
+    } = useForm<{ name: any, categories_id: any }>({
         resolver: yupResolver(validationSchema),
         defaultValues: {
             categories_id: []
