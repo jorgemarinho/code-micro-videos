@@ -1,6 +1,6 @@
 // @flow 
 import * as React from 'react';
-import {useMemo,useRef, useState, useContext } from 'react';
+import {useMemo,useRef, useState, useContext, useEffect, useCallback } from 'react';
 import format from 'date-fns/format';
 import parseISO from 'date-fns/parseISO';
 import categoryHttp from '../../util/http/category-http';
@@ -89,7 +89,7 @@ const rowsPerPageOptions = [15, 25, 50];
 
 const Table = () => {
 
-    const snackbar = useSnackbar();
+    const {enqueueSnackbar} = useSnackbar();
     const subscribed = useRef(true);
     const [data, setData] = useState<Category[]>([]);
     const loading = useContext(LoadingContext);
@@ -143,6 +143,7 @@ const Table = () => {
         extraFilter: extraFilter
     });
 
+    const searchText = cleanSearchText(debounceFilterState.search);
     const indexColumnType = columns.findIndex(c => c.name === 'is_active');
     const columnType = columns[indexColumnType];
     const typeFilterValue = filterState.extraFilter && filterState.extraFilter.type as never;
@@ -154,36 +155,19 @@ const Table = () => {
         serverSideFilterList[indexColumnType] = [typeFilterValue];
     }
 
-    React.useEffect(() => {
-        subscribed.current = true;
-        getData();
-        return () => {
-            subscribed.current = false;
-        }
-
-    }, [
-        cleanSearchText(debounceFilterState.search),
-        debounceFilterState.pagination.page,
-        debounceFilterState.pagination.per_page,
-        debounceFilterState.order,
-        JSON.stringify(debounceFilterState.extraFilter)
-    ]);
-
-
-    async function getData() {
+    const getData = useCallback( async ({search,page, per_page, sort, dir, is_active }) => {
 
         try {
             const { data } = await categoryHttp.list<ListResponse<Category>>({
                 queryParams: {
-                    search: cleanSearchText(filterState.search),
-                    page: filterState.pagination.page,
-                    per_page: filterState.pagination.per_page,
-                    sort: filterState.order.sort,
-                    dir: filterState.order.dir,
+                    search: search,
+                    page: page,
+                    per_page: per_page,
+                    sort: sort,
+                    dir: dir,
                     ...(
-                        debounceFilterState.extraFilter &&
-                        debounceFilterState.extraFilter.is_active &&
-                        { is_active: debounceFilterState.extraFilter.is_active === 'Sim' ? 1 : 0}
+                        is_active &&
+                        { is_active: is_active === 'Sim' ? 1 : 0}
                     )
                 }
             });
@@ -193,19 +177,42 @@ const Table = () => {
             }
         } catch (error) {
 
-            console.error(error);
-
             if(categoryHttp.isCancelledRequest(error)){
                 return;
             }
-
-            snackbar.enqueueSnackbar(
+            enqueueSnackbar(
                 'Não foi possível carregar as informações',
                 { variant: 'error' }
             )
-
         }
-    }
+    },[enqueueSnackbar,setTotalRecords]);
+
+    useEffect(() => {
+        subscribed.current = true;
+        getData({
+            search: searchText,
+            page: debounceFilterState.pagination.page,
+            per_page: debounceFilterState.pagination.per_page,
+            sort: debounceFilterState.order.sort,
+            dir: debounceFilterState.order.dir,
+            ...(
+                debounceFilterState.extraFilter &&
+                debounceFilterState.extraFilter.is_active &&
+                { is_active: debounceFilterState.extraFilter.is_active }
+            )
+        });
+        return () => {
+            subscribed.current = false;
+        }
+
+    }, [
+        getData,
+        searchText,
+        debounceFilterState.pagination.page,
+        debounceFilterState.pagination.per_page,
+        debounceFilterState.order,
+        debounceFilterState.extraFilter
+    ]);
 
     return (
         <MuiThemeProvider theme={makeActionStyles(columnsDefinition.length - 1)} >

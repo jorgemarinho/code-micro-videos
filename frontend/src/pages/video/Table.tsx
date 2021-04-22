@@ -1,5 +1,6 @@
 // @flow 
 import * as React from 'react';
+import {useRef, useState, useContext, useCallback } from 'react';
 import format from 'date-fns/format';
 import parseISO from 'date-fns/parseISO';
 import {  ListResponse, Video } from '../../util/models';
@@ -10,7 +11,6 @@ import EditIcon from '@material-ui/icons/Edit';
 import { useSnackbar } from 'notistack';
 import useFilter from '../../hooks/useFilter';
 import DeleteDialog from '../../components/DeleteDialog';
-
 import { FilterResetButton } from '../../components/Table/FilterResetButton';
 import videoHttp from '../../util/http/video-http';
 import useDeleteCollection from '../../hooks/useDeleteCollection';
@@ -93,18 +93,18 @@ const columnsDefinition: TableColumn[] = [
 ];
 
 const debounceTime = 300;
-const debouncedSeachTime = 300;
+//const debouncedSeachTime = 300;
 const rowsPerPage = 15;
 const rowsPerPageOptions = [15, 25, 50];
 
 const Table = () => {
 
-    const snackbar = useSnackbar();
-    const subscribed = React.useRef(true);
-    const [data, setData] = React.useState<Video[]>([]);
-    const loading = React.useContext(LoadingContext);
+    const {enqueueSnackbar} = useSnackbar();
+    const subscribed = useRef(true);
+    const [data, setData] = useState<Video[]>([]);
+    const loading = useContext(LoadingContext);
     const {openDeleteDialog, setOpenDeleteDialog, rowsToDelete, setRowsToDelete} = useDeleteCollection();
-    const tableRef = React.useRef() as React.MutableRefObject<MuiDataTableRefComponent>;
+    const tableRef = useRef() as React.MutableRefObject<MuiDataTableRefComponent>;
 
     const {
         columns,
@@ -122,33 +122,19 @@ const Table = () => {
         tableRef
     });
 
-    React.useEffect(() => {
-     
-        subscribed.current = true;
-        getData();
-        return () => {
-            subscribed.current = false;
-        }
+    const searchText = cleanSearchText(debounceFilterState.search);
 
-    }, [
-        cleanSearchText(debounceFilterState.search),
-        debounceFilterState.pagination.page,
-        debounceFilterState.pagination.per_page,
-        debounceFilterState.order
-    ]);
-
-
-    async function getData() {
+    const getData = useCallback( async ({search,page, per_page, sort, dir }) => {
 
         try {
             
             const { data } = await videoHttp.list<ListResponse<Video>>({
                 queryParams: {
-                    search: cleanSearchText(debounceFilterState.search),
-                    page: debounceFilterState.pagination.page,
-                    per_page: debounceFilterState.pagination.per_page,
-                    sort: debounceFilterState.order.sort,
-                    dir: debounceFilterState.order.dir
+                    search: searchText,
+                    page,
+                    per_page,
+                    sort,
+                    dir
                 }
             });
             if (subscribed.current) {
@@ -166,15 +152,42 @@ const Table = () => {
                 return;
             }
 
-            snackbar.enqueueSnackbar(
+            enqueueSnackbar(
                 'Não foi possível carregar as informações',
                 { variant: 'error' }
             )
-
         }
-    }
+    },[
+        enqueueSnackbar, 
+        openDeleteDialog, 
+        setTotalRecords, 
+        searchText, 
+        setOpenDeleteDialog
+    ]);
 
-    function deleteRows(confirmed: boolean){
+    React.useEffect(() => {
+     
+        subscribed.current = true;
+        getData({
+            search: searchText,
+            page: debounceFilterState.pagination.page,
+            per_page: debounceFilterState.pagination.per_page,
+            sort: debounceFilterState.order.sort,
+            dir: debounceFilterState.order.dir
+        });
+        return () => {
+            subscribed.current = false;
+        }
+
+    }, [
+        getData,
+        searchText,
+        debounceFilterState.pagination.page,
+        debounceFilterState.pagination.per_page,
+        debounceFilterState.order
+    ]);
+
+    function deleteRows(confirmed: boolean) {
 
         if(!confirmed){
             setOpenDeleteDialog(false);
@@ -189,7 +202,7 @@ const Table = () => {
             .deleteCollection({ids})
             .then(response => {
 
-                snackbar.enqueueSnackbar(
+                enqueueSnackbar(
                     'Registros excluídos com sucesso!', {
                     variant: 'success'
                 });
@@ -201,12 +214,18 @@ const Table = () => {
                     const page = filterState.pagination.page -2; 
                     filterManager.changePage(page);
                 } else {
-                    getData();
+                    getData({
+                        search: searchText,
+                        page: debounceFilterState.pagination.page,
+                        per_page: debounceFilterState.pagination.per_page,
+                        sort: debounceFilterState.order.sort,
+                        dir: debounceFilterState.order.dir
+                    });
                 }
 
             })
             .catch((error) => {
-                snackbar.enqueueSnackbar(
+                enqueueSnackbar(
                     'Não foi possível excluir os registros',
                     {variant: 'error'}
                 )

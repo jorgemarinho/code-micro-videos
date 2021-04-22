@@ -1,7 +1,7 @@
 // @flow 
 import { Chip } from '@material-ui/core';
 import * as React from 'react';
-import {useMemo,useRef, useState } from 'react';
+import {useMemo,useRef, useState, useEffect, useCallback } from 'react';
 import format from 'date-fns/format';
 import parseISO from 'date-fns/parseISO';
 import genreHttp from '../../util/http/genre-http';
@@ -95,7 +95,7 @@ const rowsPerPageOptions = [15, 25, 50];
 
 const Table = () => {
 
-    const snackbar = useSnackbar();
+    const {enqueueSnackbar} = useSnackbar();
     const subscribed = useRef(true);
     const [data, setData] = useState<Genre[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -148,6 +148,7 @@ const Table = () => {
         extraFilter: extraFilter
     });
 
+    const searchText = cleanSearchText(debounceFilterState.search);
     const indexColumnCategories = columns.findIndex(c => c.name === 'categories');
     const columnCategories = columns[indexColumnCategories];
     const categoriesFilterValue = filterState.extraFilter && filterState.extraFilter.categories;
@@ -159,66 +160,21 @@ const Table = () => {
         serverSideFilterList[indexColumnCategories] = categoriesFilterValue;
     }    
 
-    React.useEffect(() => {
-
-        let isSubscribed = true;
-        (async () => {
-
-            try {
-                const { data } = await categoryHttp.list({ queryParams: { all: '' } });
-                if (isSubscribed) {
-                    setCategories(data.data);
-                    (columnCategories.options as any).filterOptions.names = data.data.map(category => category.name)
-                }
-            } catch (error) {
-                snackbar.enqueueSnackbar(
-                    'Não foi possível carregar as informações',
-                    { variant: 'error' }
-                )
-            }
-
-        })();
-
-        return () => {
-            isSubscribed = false;
-        }
-
-    }, []);
-
-    React.useEffect(() => {
-     
-        subscribed.current = true;
-        getData();
-        return () => {
-            subscribed.current = false;
-        }
-
-    }, [
-        cleanSearchText(debounceFilterState.search),
-        debounceFilterState.pagination.page,
-        debounceFilterState.pagination.per_page,
-        debounceFilterState.order,
-        JSON.stringify(debounceFilterState.extraFilter)
-
-    ]);
-
-
-    async function getData() {
+    const getData = useCallback( async ({search,page, per_page, sort, dir, categories }) => {
 
         setLoading(true);
         try {
             
             const { data } = await genreHttp.list<ListResponse<Genre>>({
                 queryParams: {
-                    search: cleanSearchText(filterState.search),
-                    page: filterState.pagination.page,
-                    per_page: filterState.pagination.per_page,
-                    sort: filterState.order.sort,
-                    dir: filterState.order.dir,
+                    search,
+                    page,
+                    per_page,
+                    sort,
+                    dir,
                     ...(
-                        debounceFilterState.extraFilter &&
-                        debounceFilterState.extraFilter.categories &&
-                        { categories: debounceFilterState.extraFilter.categories }
+                        categories &&
+                        { categories: categories }
                     )
                 }
             });
@@ -231,8 +187,7 @@ const Table = () => {
             if(categoryHttp.isCancelledRequest(error)){
                 return;
             }
-
-            snackbar.enqueueSnackbar(
+            enqueueSnackbar(
                 'Não foi possível carregar as informações',
                 { variant: 'error' }
             )
@@ -240,7 +195,62 @@ const Table = () => {
         } finally {
             setLoading(false);
         }
-    }
+    },[enqueueSnackbar, setTotalRecords]);
+
+    useEffect(() => {
+
+        let isSubscribed = true;
+        (async () => {
+
+            try {
+                const { data } = await categoryHttp.list({ queryParams: { all: '' } });
+                if (isSubscribed) {
+                    setCategories(data.data);
+                    (columnCategories.options as any).filterOptions.names = data.data.map(category => category.name)
+                }
+            } catch (error) {
+                enqueueSnackbar(
+                    'Não foi possível carregar as informações',
+                    { variant: 'error' }
+                )
+            }
+
+        })();
+
+        return () => {
+            isSubscribed = false;
+        }
+
+    }, [enqueueSnackbar, columnCategories.options]);
+
+    React.useEffect(() => {
+     
+        subscribed.current = true;
+        getData({
+            search: searchText,
+            page: debounceFilterState.pagination.page,
+            per_page: debounceFilterState.pagination.per_page,
+            sort: debounceFilterState.order.sort,
+            dir: debounceFilterState.order.dir,
+            ...(
+                debounceFilterState.extraFilter &&
+                debounceFilterState.extraFilter.categories &&
+                { categories: debounceFilterState.extraFilter.categories }
+            )
+        });
+        return () => {
+            subscribed.current = false;
+        }
+
+    }, [
+        getData,
+        searchText,
+        debounceFilterState.pagination.page,
+        debounceFilterState.pagination.per_page,
+        debounceFilterState.order,
+        debounceFilterState.extraFilter
+
+    ]);
 
     return (
 

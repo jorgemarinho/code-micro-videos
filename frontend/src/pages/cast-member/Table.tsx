@@ -1,7 +1,7 @@
 // @flow 
 
 import * as React from 'react';
-import {useMemo,useRef, useState } from 'react';
+import {useMemo,useRef, useState, useCallback, useEffect } from 'react';
 import format from 'date-fns/format';
 import parseISO from 'date-fns/parseISO';
 import { CastMember, CastMemberTypeMap, ListResponse } from '../../util/models';
@@ -88,7 +88,7 @@ const rowsPerPageOptions = [15, 25, 50];
 
 const Table = () => {
 
-    const snackbar = useSnackbar();
+    const {enqueueSnackbar} = useSnackbar();
     const subscribed = useRef(true);
     const [data, setData] = useState<CastMember[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -140,6 +140,7 @@ const Table = () => {
         extraFilter: extraFilter
     });
 
+    const searchText = cleanSearchText(debounceFilterState.search);
     const indexColumnType = columns.findIndex(c => c.name === 'type');
     const columnType = columns[indexColumnType];
     const typeFilterValue = filterState.extraFilter && filterState.extraFilter.type as never;
@@ -151,37 +152,22 @@ const Table = () => {
         serverSideFilterList[indexColumnType] = [typeFilterValue];
     }
 
-    React.useEffect(() => {
-
-        subscribed.current = true;
-        getData();
-        return () => {
-            subscribed.current = false;
-        }
-    }, [
-        cleanSearchText(debounceFilterState.search),
-        debounceFilterState.pagination.page,
-        debounceFilterState.pagination.per_page,
-        debounceFilterState.order,
-        JSON.stringify(debounceFilterState.extraFilter)
-    ]);
-
-    async function getData() {
+    const getData =  useCallback( async ({search,page, per_page, sort, dir, type }) => {
 
         setLoading(true);
         try {
             const { data } = await castMemberHttp.list<ListResponse<CastMember>>({
                 queryParams: {
-                    search: cleanSearchText(filterState.search),
-                    page: filterState.pagination.page,
-                    per_page: filterState.pagination.per_page,
-                    sort: filterState.order.sort,
-                    dir: filterState.order.dir,
-                    ...(
-                        debounceFilterState.extraFilter &&
-                        debounceFilterState.extraFilter.type &&
-                        { type: invert(CastMemberTypeMap)[debounceFilterState.extraFilter.type] }
-                    )
+                    search,
+                    page,
+                    per_page,
+                    sort,
+                    dir,
+                    ...(type && { 
+                        type: invert(CastMemberTypeMap)[
+                            type
+                        ], 
+                    }),
                 }
             });
             if (subscribed.current) {
@@ -194,7 +180,7 @@ const Table = () => {
                 return;
             }
 
-            snackbar.enqueueSnackbar(
+            enqueueSnackbar(
                 'Não foi possível carregar as informações',
                 { variant: 'error' }
             )
@@ -202,7 +188,36 @@ const Table = () => {
         } finally {
             setLoading(false);
         }
-    }
+    },[enqueueSnackbar, setTotalRecords]);
+
+    useEffect(() => {
+
+        subscribed.current = true;
+
+        getData({
+            search: searchText,
+            page: debounceFilterState.pagination.page,
+            per_page: debounceFilterState.pagination.per_page,
+            sort: debounceFilterState.order.sort,
+            dir: debounceFilterState.order.dir,
+            ...(
+                debounceFilterState.extraFilter &&
+                debounceFilterState.extraFilter.type &&
+                { type: debounceFilterState.extraFilter.type }
+            )
+        });
+
+        return () => {
+            subscribed.current = false;
+        }
+    }, [
+        getData,
+        searchText,
+        debounceFilterState.pagination.page,
+        debounceFilterState.pagination.per_page,
+        debounceFilterState.order,
+        debounceFilterState.extraFilter
+    ]);
 
     return (
         <MuiThemeProvider theme={makeActionStyles(columnsDefinition.length - 1)} >
