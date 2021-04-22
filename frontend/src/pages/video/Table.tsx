@@ -1,5 +1,4 @@
 // @flow 
-import { Chip } from '@material-ui/core';
 import * as React from 'react';
 import format from 'date-fns/format';
 import parseISO from 'date-fns/parseISO';
@@ -9,12 +8,10 @@ import { IconButton, MuiThemeProvider } from '@material-ui/core';
 import { Link } from "react-router-dom";
 import EditIcon from '@material-ui/icons/Edit';
 import { useSnackbar } from 'notistack';
-import * as yup from '../../util/vendor/yup';
 import useFilter from '../../hooks/useFilter';
 import DeleteDialog from '../../components/DeleteDialog';
 
 import { FilterResetButton } from '../../components/Table/FilterResetButton';
-import categoryHttp from '../../util/http/category-http';
 import videoHttp from '../../util/http/video-http';
 import useDeleteCollection from '../../hooks/useDeleteCollection';
 import LoadingContext from '../../components/loading/LoadingContext';
@@ -112,9 +109,9 @@ const Table = () => {
     const {
         columns,
         filterManager,
+        cleanSearchText,
         filterState,
         debounceFilterState,
-        dispatch,
         totalRecords,
         setTotalRecords
     } = useFilter({
@@ -128,14 +125,13 @@ const Table = () => {
     React.useEffect(() => {
      
         subscribed.current = true;
-        filterManager.pushHistory();
         getData();
         return () => {
             subscribed.current = false;
         }
 
     }, [
-        filterManager.cleanSearchText(debounceFilterState.search),
+        cleanSearchText(debounceFilterState.search),
         debounceFilterState.pagination.page,
         debounceFilterState.pagination.per_page,
         debounceFilterState.order
@@ -148,7 +144,7 @@ const Table = () => {
             
             const { data } = await videoHttp.list<ListResponse<Video>>({
                 queryParams: {
-                    search: filterManager.cleanSearchText(debounceFilterState.search),
+                    search: cleanSearchText(debounceFilterState.search),
                     page: debounceFilterState.pagination.page,
                     per_page: debounceFilterState.pagination.per_page,
                     sort: debounceFilterState.order.sort,
