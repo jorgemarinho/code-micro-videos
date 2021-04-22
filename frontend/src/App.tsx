@@ -18,7 +18,7 @@ function App() {
           <SnackbarProvider>
             <CssBaseline />
             <BrowserRouter>
-              <Spinner/>
+              <Spinner />
               <Navbar />
               <Box paddingTop={'70px'}>
                 <Breadcrumbs />
