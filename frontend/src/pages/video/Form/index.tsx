@@ -14,12 +14,12 @@ import UploadField, { UploadFielComponent } from './UploadField';
 import GenreField, { GenreFieldComponent } from './GenreField';
 import CategoryField, { CategoryFieldComponent } from './CategoryField';
 import CastMemberField, { CastMemberFieldComponent } from './CastMemberField';
-import { useRef, MutableRefObject, createRef } from "react";
+import { useRef,useCallback, MutableRefObject, createRef } from "react";
 import { omit, zipObject } from 'lodash';
 import useSnackbarFormError from '../../../hooks/useSnackbarFormError';
 import SnackbarUpload from '../../../components/SnackbarUpload';
-import {useSelector, useDispatch} from 'react-redux';
-import {FileInfo, Upload, UploadModule} from '../../../store/upload/types';
+import {useDispatch} from 'react-redux';
+import {FileInfo} from '../../../store/upload/types';
 import {Creators} from '../../../store/upload';
 import LoadingContext from '../../../components/loading/LoadingContext';
 
@@ -124,7 +124,7 @@ export const Form = () => {
     useSnackbarFormError(formState.submitCount, errors);
 
     const classes = useStyles();
-    const snackbar = useSnackbar();
+    const {enqueueSnackbar} = useSnackbar();
     const history = useHistory();
     const { id } = useParams<{ id: string }>();
     const [video, setVideo] = React.useState<Video | null>(null);
@@ -138,12 +138,17 @@ export const Form = () => {
         zipObject(fileFields, fileFields.map(() => createRef()))
     ) as MutableRefObject<{ [key: string]: MutableRefObject<UploadFielComponent> }>;
 
-    /*
-    const uploads = useSelector<UploadModule, Upload[]>(
-        (state) => state.upload.uploads
-    );*/
-
     const dispatch = useDispatch();
+
+    const resetForm = useCallback( (data) => {
+        Object.keys(uploadsRef.current).forEach(
+            field => uploadsRef.current[field].current.clear()
+        );
+        castMemberRef.current.clear();
+        genreRef.current.clear();
+        categoryRef.current.clear();
+        reset(data);
+    }, [castMemberRef,genreRef,categoryRef, reset, uploadsRef]);
 
     React.useEffect(() => {
         [
@@ -166,15 +171,13 @@ export const Form = () => {
         (async () => {
            
             try {
-
                 const { data } = await videoHttp.get(id);
                 if (isSubscribed) {
                     setVideo(data.data);
                     reset(data.data);
                 }
-
             } catch (error) {
-                snackbar.enqueueSnackbar(
+                enqueueSnackbar(
                     'Não foi possível carregar as informações',
                     { variant: 'error' }
                 )
@@ -185,7 +188,7 @@ export const Form = () => {
             isSubscribed = false;
         }
 
-    }, []);
+    }, [id, reset, enqueueSnackbar]);
 
     async function onSubmit(formData, event) {
         
@@ -205,7 +208,7 @@ export const Form = () => {
 
             const { data } = await http;
 
-            snackbar.enqueueSnackbar(
+            enqueueSnackbar(
                 'Cadastrado com sucesso! ', {
                 variant: 'success'
             });
@@ -226,22 +229,11 @@ export const Form = () => {
 
         } catch (error) {
 
-            snackbar.enqueueSnackbar(
+            enqueueSnackbar(
                 'Não foi possível salvar o membro de elenco :( ', {
                 variant: 'error'
             })
-
         }
-    }
-
-    function resetForm(data) {
-        Object.keys(uploadsRef.current).forEach(
-            field => uploadsRef.current[field].current.clear()
-        );
-        castMemberRef.current.clear();
-        genreRef.current.clear();
-        categoryRef.current.clear();
-        reset(data);
     }
 
     function uploadFiles(video) {
@@ -255,7 +247,7 @@ export const Form = () => {
 
         dispatch(Creators.addUpload({video, files}));
         
-        snackbar.enqueueSnackbar('', {
+        enqueueSnackbar('', {
             key: 'snackbar-upload',
             persist: true,
             anchorOrigin:{

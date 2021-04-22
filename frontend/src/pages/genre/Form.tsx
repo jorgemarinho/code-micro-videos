@@ -40,7 +40,7 @@ export const Form = () => {
         }
     });
 
-    const snackbar = useSnackbar();
+    const {enqueueSnackbar} = useSnackbar();
     const history = useHistory();
     const { id } = useParams<{ id: string }>();
     const [genre, setGenre] = React.useState<Genre | null>(null);
@@ -77,8 +77,7 @@ export const Form = () => {
 
             } catch (error) {
 
-                console.error(error);
-                snackbar.enqueueSnackbar(
+                enqueueSnackbar(
                     'Não foi possível carregar as informações',
                     { variant: 'error' }
                 )
@@ -92,7 +91,7 @@ export const Form = () => {
             isSubscribed = false;
         }
 
-    }, [id, reset, snackbar]);
+    }, [id, reset, enqueueSnackbar]);
 
 
     React.useEffect(() => {
@@ -110,7 +109,7 @@ export const Form = () => {
 
             const { data } = await http;
 
-            snackbar.enqueueSnackbar(
+            enqueueSnackbar(
                 'Cadastrado com sucesso! ', {
                 variant: 'success'
             });
@@ -127,8 +126,7 @@ export const Form = () => {
 
         } catch (error) {
 
-            console.log(error);
-            snackbar.enqueueSnackbar(
+            enqueueSnackbar(
                 'Não foi possível salvar o membro de elenco :( ', {
                 variant: 'error'
             })
