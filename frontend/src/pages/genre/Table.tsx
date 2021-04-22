@@ -1,6 +1,7 @@
 // @flow 
 import { Chip } from '@material-ui/core';
 import * as React from 'react';
+import {useMemo,useRef, useState } from 'react';
 import format from 'date-fns/format';
 import parseISO from 'date-fns/parseISO';
 import genreHttp from '../../util/http/genre-http';
@@ -95,11 +96,40 @@ const rowsPerPageOptions = [15, 25, 50];
 const Table = () => {
 
     const snackbar = useSnackbar();
-    const subscribed = React.useRef(true);
-    const [data, setData] = React.useState<Genre[]>([]);
-    const [loading, setLoading] = React.useState<boolean>(false);
-    const [categories, setCategories] = React.useState<Category[]>();
-    const tableRef = React.useRef() as React.MutableRefObject<MuiDataTableRefComponent>;
+    const subscribed = useRef(true);
+    const [data, setData] = useState<Genre[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [categories, setCategories] = useState<Category[]>();
+    const tableRef = useRef() as React.MutableRefObject<MuiDataTableRefComponent>;
+
+    const extraFilter = useMemo( () => ({
+
+        createValidationSchema: () => {
+            return yup.object().shape({
+                categories: yup.mixed()
+                    .nullable()
+                    .transform(value => {
+                        return !value || value === '' ? undefined : value.split(',');
+                    })
+                    .default(null)
+            })
+        },
+        formatSearchParams: (debouncedState) => {
+            return debouncedState.extraFilter
+                ? {
+                    ...(
+                        debouncedState.extraFilter.categories &&
+                        { categories: debouncedState.extraFilter.categories.join(',') }
+                    )
+                }
+                : undefined
+        },
+        getStateFromURL: (queryParams) => {
+            return {
+                categories: queryParams.get('categories')
+            }
+        }
+    }),[]);
 
     const {
         columns,
@@ -107,7 +137,6 @@ const Table = () => {
         cleanSearchText,
         filterState,
         debounceFilterState,
-        dispatch,
         totalRecords,
         setTotalRecords
     } = useFilter({
@@ -116,33 +145,7 @@ const Table = () => {
         rowsPerPage,
         rowsPerPageOptions,
         tableRef,
-        extraFilter: {
-            createValidationSchema: () => {
-                return yup.object().shape({
-                    categories: yup.mixed()
-                        .nullable()
-                        .transform(value => {
-                            return !value || value === '' ? undefined : value.split(',');
-                        })
-                        .default(null)
-                })
-            },
-            formatSearchParams: (debouncedState) => {
-                return debouncedState.extraFilter
-                    ? {
-                        ...(
-                            debouncedState.extraFilter.categories &&
-                            { categories: debouncedState.extraFilter.categories.join(',') }
-                        )
-                    }
-                    : undefined
-            },
-            getStateFromURL: (queryParams) => {
-                return {
-                    categories: queryParams.get('categories')
-                }
-            }
-        }
+        extraFilter: extraFilter
     });
 
     const indexColumnCategories = columns.findIndex(c => c.name === 'categories');

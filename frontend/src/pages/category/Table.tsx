@@ -1,5 +1,6 @@
 // @flow 
 import * as React from 'react';
+import {useMemo,useRef, useState, useContext } from 'react';
 import format from 'date-fns/format';
 import parseISO from 'date-fns/parseISO';
 import categoryHttp from '../../util/http/category-http';
@@ -16,7 +17,6 @@ import * as yup from '../../util/vendor/yup';
 import LoadingContext from '../../components/loading/LoadingContext';
 
 const categoryActive = Object.values( { 1:'Sim', 0: 'Não' });
-
 
 const columnsDefinition: TableColumn[] = [
     {
@@ -90,10 +90,41 @@ const rowsPerPageOptions = [15, 25, 50];
 const Table = () => {
 
     const snackbar = useSnackbar();
-    const subscribed = React.useRef(true);
-    const [data, setData] = React.useState<Category[]>([]);
-    const loading = React.useContext(LoadingContext);
-    const tableRef = React.useRef() as React.MutableRefObject<MuiDataTableRefComponent>;
+    const subscribed = useRef(true);
+    const [data, setData] = useState<Category[]>([]);
+    const loading = useContext(LoadingContext);
+    const tableRef = useRef() as React.MutableRefObject<MuiDataTableRefComponent>;
+
+    const extraFilter = useMemo( () => ({
+        createValidationSchema: () => {
+            return yup.object().shape({
+                is_active: yup.mixed()
+                    .nullable()
+                    .transform(value => {
+                       
+                       //return !value || value === 'Sim' ? 1 : 0;
+                       return !value || !categoryActive.includes(value) ? undefined : value;
+
+                    })
+                    .default(null)
+            })
+        },
+        formatSearchParams: (debouncedState) => {
+            return debouncedState.extraFilter
+                ? {
+                    ...(
+                        debouncedState.extraFilter.is_active &&
+                        { is_active: debouncedState.extraFilter.is_active }
+                    )
+                }
+                : undefined
+        },
+        getStateFromURL: (queryParams) => {
+            return {
+                is_active: queryParams.get('is_active')
+            }
+        }
+    }),[]);
 
     const {       
         columns,
@@ -101,7 +132,6 @@ const Table = () => {
         cleanSearchText,
         filterState,
         debounceFilterState,
-        dispatch,
         totalRecords,
         setTotalRecords
     } = useFilter({
@@ -110,36 +140,7 @@ const Table = () => {
         rowsPerPage,
         rowsPerPageOptions,
         tableRef,
-        extraFilter: {
-            createValidationSchema: () => {
-                return yup.object().shape({
-                    is_active: yup.mixed()
-                        .nullable()
-                        .transform(value => {
-                           
-                           //return !value || value === 'Sim' ? 1 : 0;
-                           return !value || !categoryActive.includes(value) ? undefined : value;
-
-                        })
-                        .default(null)
-                })
-            },
-            formatSearchParams: (debouncedState) => {
-                return debouncedState.extraFilter
-                    ? {
-                        ...(
-                            debouncedState.extraFilter.is_active &&
-                            { is_active: debouncedState.extraFilter.is_active }
-                        )
-                    }
-                    : undefined
-            },
-            getStateFromURL: (queryParams) => {
-                return {
-                    is_active: queryParams.get('is_active')
-                }
-            }
-        }
+        extraFilter: extraFilter
     });
 
     const indexColumnType = columns.findIndex(c => c.name === 'is_active');
