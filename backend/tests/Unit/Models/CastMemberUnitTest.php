@@ -4,6 +4,7 @@ namespace Tests\Unit\Models;
 
 use App\Models\CastMember;
 use App\Models\Traits\Uuid;
+use EloquentFilter\Filterable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Tests\TestCase;
 
@@ -41,7 +42,7 @@ class CastMemberUnitTest extends TestCase
     public function testIfUseTraits()
     {
         $traits = [
-            SoftDeletes::class, Uuid::class
+            SoftDeletes::class, Uuid::class, Filterable::class
         ];
 
         $castMemberTraits = array_keys(class_uses(CastMember::class));
