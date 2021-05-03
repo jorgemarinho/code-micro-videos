@@ -51,7 +51,7 @@ steps:
 
    - id: "Copiando frontend .env"
      name: 'gcr.io/cloud-builders/docker'
-     args: ['exec','-t','app','cp','/var/www/frontend/.env.testing.example','/var/www/frontend/.env']
+     args: ['exec','-t','app','cp','/var/www/frontend/.env.example','/var/www/frontend/.env']
 
    - id: "Install front-end"
      name: 'gcr.io/cloud-builders/docker'
