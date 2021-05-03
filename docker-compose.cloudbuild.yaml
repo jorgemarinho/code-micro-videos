@@ -49,7 +49,7 @@ services:
       - ./.docker/mysql:/docker-entrypoint-initdb.d
       environment:
       - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=root
+     # - MYSQL_USER=root
       networks:
       - app-network
    redis:
