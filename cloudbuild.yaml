@@ -65,6 +65,10 @@ steps:
      name: 'gcr.io/cloud-builders/docker'
      args: ['exec','-t','app','npm', 'run','build-laravel','--prefix', '/var/www/frontend']
 
+   - id: "Install dusk"
+     name: 'gcr.io/cloud-builders/docker'
+     args: ['exec','-w', '/var/www/backend', '-t' , 'app', 'php', 'artisan','dusk:install']
+
    - id: "Test Laravel and React integration"
      name: 'gcr.io/cloud-builders/docker'
      args: ['exec','-w', '/var/www/backend', '-t' , 'app', 'php', 'artisan','dusk','--env=testing']
