@@ -72,3 +72,4 @@ steps:
    - id: "Test Laravel and React integration"
      name: 'gcr.io/cloud-builders/docker'
      args: ['exec','-w', '/var/www/backend', '-t' , 'app', 'php', 'artisan','dusk','--env=testing']
+timeout: 1200s
