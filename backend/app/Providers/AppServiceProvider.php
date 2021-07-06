@@ -30,9 +30,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         //
-        Category::observe(CategoryObserver::class);
-        Genre::observe(GenreObserver::class);
-        CastMember::observe(CastMemberObserver::class);
+        Category::observe(SyncModelObserver::class);
+        Genre::observe(SyncModelObserver::class);
+        CastMember::observe(SyncModelObserver::class);
         
         \View::addExtension('html', 'blade');
     }
