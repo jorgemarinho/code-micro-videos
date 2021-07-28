@@ -21,7 +21,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => explode(',', $origins),
+    'allowed_origins' => ['*'], //explode(',', $origins),
 
     'allowed_origins_patterns' => [],
 

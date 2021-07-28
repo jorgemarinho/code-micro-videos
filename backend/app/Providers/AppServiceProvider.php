@@ -8,6 +8,7 @@ use App\Models\Genre;
 use App\Observers\CastMemberObserver;
 use App\Observers\CategoryObserver;
 use App\Observers\GenreObserver;
+use App\Observers\SyncModelObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider

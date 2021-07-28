@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Filters\GenreFilter;
+use App\Models\Traits\SerializeDateToIso8601;
+use Chelout\RelationshipEvents\Concerns\HasBelongsToManyEvents;
 use EloquentFilter\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Genre extends Model
 {
-    use SoftDeletes, \App\Models\Traits\Uuid, Filterable;
+    use SoftDeletes, \App\Models\Traits\Uuid, Filterable, SerializeDateToIso8601, HasBelongsToManyEvents;
 
     protected $fillable = [
         'name',
@@ -28,6 +30,9 @@ class Genre extends Model
 
     protected $keyType = 'string';
 
+    protected $observables = [
+        'belongsToManyAttached'
+    ];
 
     public function categories()
     {
