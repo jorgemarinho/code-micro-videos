@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Auth\KeycloakGuard;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -26,5 +27,11 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         //
+        \Auth::extend('keycloak', function($app, $name, $config){
+            return new KeycloakGuard(
+                $app['tymon.jwt'],
+                $app['request']
+            );
+        });
     }
 }
