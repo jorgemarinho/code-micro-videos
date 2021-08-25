@@ -1,3 +1,7 @@
 {
-    "better-phpunit.phpunitBinary": "/var/www/html/code-micro-videos/vendor/bin/phpunit"
+    "better-phpunit.phpunitBinary": "/var/www/html/code-micro-videos/vendor/bin/phpunit",
+    "cSpell.words": [
+        "Authenticatable",
+        "Macroable"
+    ]
 }
