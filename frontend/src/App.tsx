@@ -1,4 +1,5 @@
 import { Box, CssBaseline, MuiThemeProvider } from '@material-ui/core';
+import { ReactKeycloakProvider } from '@react-keycloak/web';
 import * as React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import './App.css';
@@ -9,15 +10,16 @@ import { SnackbarProvider } from './components/SnackbarProvider';
 import Spinner from './components/Spinner';
 import AppRouter from './routes/AppRouter';
 import theme from './theme';
+import { keycloak, keycloakConfig } from './util/auth';
 
 function App() {
   return (
-    <React.Fragment>
+    <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakConfig}>
       <LoadingProvider>
         <MuiThemeProvider theme={theme}>
           <SnackbarProvider>
             <CssBaseline />
-            <BrowserRouter basename="/admin">
+            <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
               <Spinner />
               <Navbar />
               <Box paddingTop={'70px'}>
@@ -28,7 +30,7 @@ function App() {
           </SnackbarProvider>
         </MuiThemeProvider>
       </LoadingProvider>
-    </React.Fragment>
+    </ReactKeycloakProvider>
   );
 }
 

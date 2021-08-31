@@ -15,6 +15,7 @@ import { FilterResetButton } from '../../components/Table/FilterResetButton';
 import useFilter from '../../hooks/useFilter';
 import * as yup from '../../util/vendor/yup';
 import LoadingContext from '../../components/loading/LoadingContext';
+import { useKeycloak } from '@react-keycloak/web';
 
 const categoryActive = Object.values( { 1:'Sim', 0: 'Não' });
 
@@ -88,7 +89,8 @@ const rowsPerPage = 15;
 const rowsPerPageOptions = [15, 25, 50]; 
 
 const Table = () => {
-
+    const obj = useKeycloak();
+    
     const {enqueueSnackbar} = useSnackbar();
     const subscribed = useRef(true);
     const [data, setData] = useState<Category[]>([]);
